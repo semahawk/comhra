@@ -1,0 +1,71 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Braithreachas</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="http://code.jquery.com/jquery-latest.min.js"></script>
+    <link rel="stylesheet" href="/style.css" type="text/css">
+    <script>
+      $(document).ready(function(){
+        var talk = $("#talk");
+        var entry = $("#entry");
+        var users = $("#users");
+        var socket = io.connect('http://192.168.1.100:13013');
+
+        entry.focus();
+
+        socket.on('connect', function(){
+          <!-- //socket.emit('adduser', prompt("What's your name?")); -->
+          socket.emit('adduser', "szomon", "#525252");
+        });
+
+        socket.on('updateuser', function(username, color){
+          $("#username").html(username);
+          $("#toolbar").css("background", color);
+        });
+
+        socket.on('updatetalk', function(username, color, msg){
+          var d = new Date();
+          talk.append("<tr class='message'>" +
+            "<td class='date'>["+d.getHours()+":"+d.getMinutes()+":"+d.getSeconds()+"]"+"</td>" +
+            "<td class='nick' style='color: "+color+";'>&lt;" + username + "&gt;</td>" +
+            "<td class='msg-text'>" + msg + "</td>" +
+            "</tr>");
+        });
+
+        socket.on('updateusers', function(users){
+          var userscount = 0;
+          var inside = "<ul>";
+          for (var user in users){
+            userscount++;
+            inside += "<li style='color: " + users[user].color + ";'>" + users[user].name + "</li>";
+          }
+          inside += "</ul>";
+          $("#usersbox").html(inside);
+          $("#users").text(userscount + (userscount == 1 ? " user" : " users"));
+        });
+
+        entry.keypress(function(e){
+          if (e.which == 13){
+            socket.emit('sendchat', entry.val());
+            entry.val("");
+          }
+        });
+      });
+    </script>
+  </head>
+  <body>
+    <table id="talk"></table>
+    <div id="usersbox"></div>
+    <div class="clear"></div>
+    <div id="toolbar">
+      <ul id="status">
+        <li><a id="username" href="#"></a></li>
+        <li><a id="users" href="#"></a></li>
+        <!--<li>uptime: <span id="uptime">?</span></li>-->
+        <!--<li>memory: <span id="memory">?</span></li>-->
+      </ul>
+      <input tabindex="1" type="text" id="entry">
+    </div>
+  </body>
+</html>
