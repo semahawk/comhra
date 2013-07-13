@@ -10,13 +10,14 @@
         var talk = $("#talk");
         var entry = $("#entry");
         var users = $("#users");
-        var socket = io.connect('http://192.168.1.100:13013');
+        var socket = io.connect('http://176.107.172.14:13013');
 
         entry.focus();
 
         socket.on('connect', function(){
-          <!-- //socket.emit('adduser', prompt("What's your name?")); -->
-          socket.emit('adduser', "szomon", "#525252");
+          var name = prompt("Godność");
+          var color = prompt("Kolor (szesnastkowo, domyślnie #525252)");
+          socket.emit('adduser', name, color == "" ? "#525252" : color);
         });
 
         socket.on('updateuser', function(username, color){

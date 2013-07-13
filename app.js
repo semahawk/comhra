@@ -31,7 +31,7 @@ io.sockets.on('connection', function (socket) {
   });
 
   socket.on('disconnect', function(){
-    //delete users[socket.username];
+    delete users[socket.username];
     console.log(socket.username + " disconnected");
   });
 });
