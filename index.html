@@ -68,12 +68,11 @@
           var userscount = 0;
           var inside = "<ul>";
           for (var user in users){
+            inside += "<li style='color: " + users[user].color + ";'>" + userscount + " " + users[user].name + "</li>";
             userscount++;
-            inside += "<li style='color: " + users[user].color + ";'>" + users[user].name + "</li>";
           }
           inside += "</ul>";
           usersbox.html(inside);
-          $("#users").text(userscount + (userscount == 1 ? " user" : " users"));
         });
 
         entry.keypress(function(e){
@@ -94,7 +93,6 @@
     <div id="toolbar">
       <ul id="status">
         <li id="username"></a></li>
-        <li id="users"></a></li>
         <li id="debug"></li>
         <!--<li>uptime: <span id="uptime">?</span></li>-->
         <!--<li>memory: <span id="memory">?</span></li>-->
