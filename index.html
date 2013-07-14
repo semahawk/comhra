@@ -19,14 +19,12 @@
         usersbox.css("left", talk.width());
         /* focus on the input */
         entry.focus();
-        /* remove the server down info */
-        $("#debug").html("");
         /* scroll to the bottom */
         window.scrollBy(0, 1000000);
+        $(".message").css("color", "#525252");
 
         socket.on('connect', function(){
           window.scrollBy(0, 1000000);
-          $("#debug").html("");
           var name, color;
           if (handy.getCookie('known') !== null){
             name = handy.getCookie('known').split(":")[0];
@@ -40,7 +38,8 @@
         });
 
         socket.on('disconnect', function(){
-          $("#debug").html("!server down!");
+          $("#toolbar").css("background", "#525252");
+          $(".message").css("color", "#525252");
           setInterval(function(){
             window.scrollBy(0, 1000000);
             socket.socket.reconnect();
@@ -98,7 +97,6 @@
     <div id="toolbar">
       <ul id="status">
         <li id="username"></a></li>
-        <li id="debug"></li>
         <!--<li>uptime: <span id="uptime">?</span></li>-->
         <!--<li>memory: <span id="memory">?</span></li>-->
       </ul>
