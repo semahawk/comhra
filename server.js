@@ -56,7 +56,7 @@ io.sockets.on('connection', function (socket) {
     /* do anything only when the message is not whitespace only */
     if (!handy.isBlank(data)){
       console.log(socket.username + ": " + data);
-      io.sockets.emit('updatetalk', socket.username, socket.color, data, new Date());
+      io.sockets.emit('updatetalk', socket.username, socket.color, data, /* ugly ass hack */ new Date().getTime() / 1000);
       /* save the message into the database */
       var cmd = "./db save '" + socket.username + "' '" + socket.color + "' '" + data + "'";
       child = exec(cmd, function(err, stdout, stderr){
