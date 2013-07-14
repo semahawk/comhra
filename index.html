@@ -58,13 +58,15 @@
 
         socket.on('updatetalk', function(username, color, msg){
           var d = new Date();
+          msg = handy.toStaticHTML(msg);
+          msg = msg.replace("&lt;3", "<span style='color: #cc3333';>&#x2665;</span>");
+          msg = msg.replace("3&gt;", "<span style='color: #cc3333';>&#x2665;</span>");
+          msg = msg.replace(handy.urlRE, '<a target="_blank" href="$&">$&</a>');
           talk.append("<tr class='message'>" +
             "<td class='date'>["+d.getHours()+":"+d.getMinutes()+":"+d.getSeconds()+"]"+"</td>" +
             "<td class='nick' style='color: "+color+";'>&lt;" + username + "&gt;</td>" +
-            "<td class='msg-text'>" +
-              msg.replace("<3", "<span style='color: #dd3333;'>&#x2665;</span>")
-                 .replace(handy.urlRE, '<a target="_blank" href="$&">$&</a>') +
-            "</td>" + "</tr>");
+            "<td class='msg-text'>" + msg + "</td>" +
+          "</tr>");
         });
 
         socket.on('updateusers', function(users){
