@@ -16,15 +16,17 @@
 use strict;
 use warnings;
 use DBI;
-use JSON::XS;
+use JSON;
 
 my $db = DBI->connect("dbi:SQLite:logs.db") or die;
 
 if (!defined $ARGV[0]){
     die <<EOS;
+
 usage: $0 fetch [limit]
      | $0 save <username> <color> <message>
      ;
+
 EOS
 }
 
@@ -36,7 +38,7 @@ if ($ARGV[0] eq "fetch"){
     $stmt .= "WHERE time >= DATE() ";
   }
   my $res = $db->selectall_arrayref(qq/$stmt/);
-  print encode_json $res;
+  print to_json $res;
 }
 elsif ($ARGV[0] eq "save"){
   if (!defined $ARGV[1]){
@@ -52,3 +54,5 @@ elsif ($ARGV[0] eq "save"){
   $db->do($stmt);
 }
 else { die "$0: no command specified" }
+
+$db->disconnect;
