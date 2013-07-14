@@ -65,6 +65,7 @@
             "<td class='nick' style='color: "+color+";'>&lt;" + username + "&gt;</td>" +
             "<td class='msg-text'>" + msg + "</td>" +
           "</tr>");
+          window.scrollBy(0, 1000000);
         });
 
         socket.on('updateusers', function(users){
