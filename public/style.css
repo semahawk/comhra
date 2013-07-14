@@ -81,17 +81,21 @@ a:hover {
   padding-bottom: 7em;
   background: inherit;
   overflow: hidden;
-  float: left;
   width: 82%;
+  max-width: 82%;
+  float: left;
 }
 
 #usersbox {
   width: 18%;
+  position: fixed;
   float: left;
+  padding: 10px;
 }
 
   #usersbox ul {
     list-style: none;
+    margin: 0; padding: 0;
   }
 
 .notice td, .join td, .part td, .message .date { color: #555555; }

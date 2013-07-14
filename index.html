@@ -8,10 +8,14 @@
     <link rel="stylesheet" href="/style.css" type="text/css">
     <script>
       $(document).ready(function(){
+        var usersbox = $("#usersbox");
         var talk = $("#talk");
         var entry = $("#entry");
         var users = $("#users");
         var socket = io.connect('http://176.107.172.14:13013');
+
+        /* position the users box nicely */
+        usersbox.css("left", talk.width());
 
         entry.focus();
 
@@ -51,7 +55,7 @@
             inside += "<li style='color: " + users[user].color + ";'>" + users[user].name + "</li>";
           }
           inside += "</ul>";
-          $("#usersbox").html(inside);
+          usersbox.html(inside);
           $("#users").text(userscount + (userscount == 1 ? " user" : " users"));
         });
 
