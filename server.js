@@ -35,7 +35,8 @@ io.sockets.on('connection', function (socket) {
     }
     socket.username = username;
     socket.color = color;
-    users[username] = { name: username, color: color };
+    socket.ip = socket.handshake.address.address;
+    users[username] = { name: username, color: color, ip: socket.ip };
     /* output the history logs */
     child = exec("./db fetch", function(err, stdout, stderr){
       if (err !== null){
@@ -47,7 +48,7 @@ io.sockets.on('connection', function (socket) {
         }
       }
     });
-    console.log(username + " has joined");
+    console.log(username + " (" + socket.handshake.address.address + ") has joined");
     io.sockets.emit('updateusers', users);
     socket.emit('updateuser', socket.username, socket.color);
   });
@@ -71,7 +72,7 @@ io.sockets.on('connection', function (socket) {
         if (args[0] === undefined){
           socket.emit('updatetalk', 'SERVER', '#525252', "usage: /nick <NICK>", new Date().getTime() / 1000);
         } else {
-          var newname = args.splice(1).join(" ");
+          var newname = args[0];
           users[newname] = users[socket.username];
           users[newname].name = newname;
           delete users[socket.username];
