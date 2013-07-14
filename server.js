@@ -27,10 +27,10 @@ var users = {};
 io.sockets.on('connection', function (socket) {
   socket.on('adduser', function(username, color){
     socket.emit('clear');
-    if (username == ""){
+    if (username == "" || username == "null"){
       username = "name_" + unknms++;
     }
-    if (color == ""){
+    if (color == "" || color == "null"){
       color = "#525252";
     }
     socket.username = username;
@@ -43,7 +43,7 @@ io.sockets.on('connection', function (socket) {
       } else {
         var messages = JSON.parse(stdout);
         for (var i = 0; i < messages.length; i++){
-          io.sockets.emit('updatetalk', messages[i][1], messages[i][2], messages[i][3]);
+          io.sockets.emit('updatetalk', messages[i][1], messages[i][2], messages[i][3], messages[i][4]);
         }
       }
     });
@@ -56,7 +56,7 @@ io.sockets.on('connection', function (socket) {
     /* do anything only when the message is not whitespace only */
     if (!handy.isBlank(data)){
       console.log(socket.username + ": " + data);
-      io.sockets.emit('updatetalk', socket.username, socket.color, data);
+      io.sockets.emit('updatetalk', socket.username, socket.color, data, new Date());
       /* save the message into the database */
       var cmd = "./db save '" + socket.username + "' '" + socket.color + "' '" + data + "'";
       child = exec(cmd, function(err, stdout, stderr){

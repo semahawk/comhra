@@ -55,13 +55,16 @@
           $("#toolbar").css("background", color);
         });
 
-        socket.on('updatetalk', function(username, color, msg){
+        socket.on('updatetalk', function(username, color, msg, time){
+          /* time passed here are seconds since epoch, but new Date() expects
+             milliseconds */
+          time *= 1000;
           msg = handy.toStaticHTML(msg);
           msg = msg.replace("&lt;3", "<span style='color: #cc3333';>&#x2665;</span>");
           msg = msg.replace("3&gt;", "<span style='color: #cc3333';>&#x2665;</span>");
           msg = msg.replace(handy.urlRE, '<a target="_blank" href="$&">$&</a>');
           talk.append("<tr class='message'>" +
-            "<td class='date'>[" + handy.timeString(new Date()) + "]"+"</td>" +
+            "<td class='date'>[" + handy.timeString(new Date(time)) + "]"+"</td>" +
             "<td class='nick' style='color: "+color+";'>&lt;" + username + "&gt;</td>" +
             "<td class='msg-text'>" + msg + "</td>" +
           "</tr>");

@@ -34,8 +34,6 @@ if ($ARGV[0] eq "fetch"){
   my $stmt = "SELECT * FROM messages ";
   if (defined $ARGV[1]){
     $stmt .= "LIMIT $ARGV[1] ";
-  } else {
-    $stmt .= "WHERE time >= DATE() ";
   }
   my $res = $db->selectall_arrayref(qq/$stmt/);
   print to_json $res;
