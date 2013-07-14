@@ -78,7 +78,7 @@ a:hover {
 #talk {
   display: block;
   /* enough padding to clear the toolbar.. is there a better way to do this? */
-  padding-bottom: 5.1em;
+  padding-bottom: 7em;
   background: inherit;
   overflow: hidden;
   float: left;

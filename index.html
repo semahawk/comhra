@@ -26,6 +26,7 @@
           }
           handy.setCookie('known', name + ":" + color, 60 * 60 * 24 * 7);
           socket.emit('adduser', name, color);
+          window.scrollBy(0, 1000000);
         });
 
         socket.on('updateuser', function(username, color){
@@ -57,7 +58,9 @@
         entry.keypress(function(e){
           if (e.which == 13){
             socket.emit('sendchat', entry.val());
+            window.scrollBy(0, 1000000);
             entry.val("");
+            entry.focus();
           }
         });
       });
