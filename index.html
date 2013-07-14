@@ -4,6 +4,7 @@
     <title>Braithreachas</title>
     <script src="/socket.io/socket.io.js"></script>
     <script src="http://code.jquery.com/jquery-latest.min.js"></script>
+    <script src="/handy.js"></script>
     <link rel="stylesheet" href="/style.css" type="text/css">
     <script>
       $(document).ready(function(){
@@ -15,9 +16,16 @@
         entry.focus();
 
         socket.on('connect', function(){
-          var name = prompt("Godność");
-          var color = prompt("Kolor (szesnastkowo, domyślnie #525252)");
-          socket.emit('adduser', name, color == "" ? "#525252" : color);
+          var name, color;
+          if (handy.getCookie('known') !== null){
+            name = handy.getCookie('known').split(":")[0];
+            color = handy.getCookie('known').split(":")[1];
+          } else {
+            name = prompt("Nick");
+            color = prompt("Kolor (w formacie /#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})/)");
+          }
+          handy.setCookie('known', name + ":" + color, 60 * 60 * 24 * 7);
+          socket.emit('adduser', name, color);
         });
 
         socket.on('updateuser', function(username, color){

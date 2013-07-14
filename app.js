@@ -8,6 +8,11 @@ var sys = require('sys');
 var exec = require('child_process').exec;
 var child;
 
+var handy = require('./public/handy.js');
+
+/* number of current unknown names */
+var unknms = 0;
+
 server.listen(13013);
 
 app.use(express.static(__dirname + '/public'));
@@ -21,6 +26,12 @@ var users = {};
 
 io.sockets.on('connection', function (socket) {
   socket.on('adduser', function(username, color){
+    if (username == ""){
+      username = "name_" + unknms++;
+    }
+    if (color == ""){
+      color = "#525252";
+    }
     socket.username = username;
     socket.color = color;
     users[username] = { name: username, color: color };
@@ -41,15 +52,18 @@ io.sockets.on('connection', function (socket) {
   });
 
   socket.on('sendchat', function (data) {
-    console.log(socket.username + ": " + data);
-    io.sockets.emit('updatetalk', socket.username, socket.color, data);
-    /* save the message into the database */
-    var cmd = "./db save '" + socket.username + "' '" + socket.color + "' '" + data + "'";
-    child = exec(cmd, function(err, stdout, stderr){
-      if (err !== null){
-        console.log("ERR: saving to database failed: " + err);
-      }
-    });
+    /* do anything only when the message is not whitespace only */
+    if (!handy.isBlank(data)){
+      console.log(socket.username + ": " + data);
+      io.sockets.emit('updatetalk', socket.username, socket.color, data);
+      /* save the message into the database */
+      var cmd = "./db save '" + socket.username + "' '" + socket.color + "' '" + data + "'";
+      child = exec(cmd, function(err, stdout, stderr){
+        if (err !== null){
+          console.log("ERR: saving to database failed: " + err);
+        }
+      });
+    }
   });
 
   socket.on('disconnect', function(){
