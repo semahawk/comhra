@@ -4,6 +4,10 @@ var app = express(),
     server = http.createServer(app),
     io = require('socket.io').listen(server, { log: false });
 
+var sys = require('sys');
+var exec = require('child_process').exec;
+var child;
+
 server.listen(13013);
 
 app.use(express.static(__dirname + '/public'));
@@ -20,6 +24,17 @@ io.sockets.on('connection', function (socket) {
     socket.username = username;
     socket.color = color;
     users[username] = { name: username, color: color };
+    /* output the history logs */
+    child = exec("./db fetch", function(err, stdout, stderr){
+      if (err !== null){
+        console.log("ERR: reading messages from database failed: " + err);
+      } else {
+        var messages = JSON.parse(stdout);
+        for (var i = 0; i < messages.length; i++){
+          io.sockets.emit('updatetalk', messages[i][1], messages[i][2], messages[i][3]);
+        }
+      }
+    });
     console.log(username + " has joined");
     io.sockets.emit('updateusers', users);
     socket.emit('updateuser', socket.username, socket.color);
@@ -28,6 +43,13 @@ io.sockets.on('connection', function (socket) {
   socket.on('sendchat', function (data) {
     console.log(socket.username + ": " + data);
     io.sockets.emit('updatetalk', socket.username, socket.color, data);
+    /* save the message into the database */
+    var cmd = "./db save '" + socket.username + "' '" + socket.color + "' '" + data + "'";
+    child = exec(cmd, function(err, stdout, stderr){
+      if (err !== null){
+        console.log("ERR: saving to database failed: " + err);
+      }
+    });
   });
 
   socket.on('disconnect', function(){

@@ -1,0 +1,54 @@
+#!/usr/bin/perl
+#
+# fetchlogs.pl
+#
+# Copyright: (c) 2013 by Szymon Urbaś <szymon.urbas@aol.com>
+#
+# Usage: fetchlogs.pl
+#
+# Description:
+#
+# License: the MIT license
+#
+# Created at: 07/14/13 10:45:15
+#
+
+use strict;
+use warnings;
+use DBI;
+use JSON::XS;
+
+my $db = DBI->connect("dbi:SQLite:logs.db") or die;
+
+if (!defined $ARGV[0]){
+    die <<EOS;
+usage: $0 fetch [limit]
+     | $0 save <username> <color> <message>
+     ;
+EOS
+}
+
+if ($ARGV[0] eq "fetch"){
+  my $stmt = "SELECT * FROM logs ";
+  if (defined $ARGV[1]){
+    $stmt .= "LIMIT $ARGV[1] ";
+  } else {
+    $stmt .= "WHERE time >= DATE() ";
+  }
+  my $res = $db->selectall_arrayref(qq/$stmt/);
+  print encode_json $res;
+}
+elsif ($ARGV[0] eq "save"){
+  if (!defined $ARGV[1]){
+    die "$0 save: <username> not specified";
+  } elsif (!defined $ARGV[2]){
+    die "$0 save: <color> not specified";
+  } elsif (!defined $ARGV[3]){
+    die "$0 save: <message> not specified";
+  }
+
+  my $stmt = "insert into logs(id, username, color, msg, time)" .
+             "values(NULL, '$ARGV[1]', '$ARGV[2]', '$ARGV[3]', datetime('now'))";
+  $db->do($stmt);
+}
+else { die "$0: no command specified" }
