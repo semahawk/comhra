@@ -46,6 +46,10 @@
           }, 1000);
         });
 
+        socket.on('set cookie', function(key, value){
+          handy.setCookie(key, value, 60 * 60 * 24 * 7);
+        });
+
         socket.on('clear', function(){
           $("#talk").html("");
         });

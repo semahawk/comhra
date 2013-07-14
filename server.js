@@ -63,6 +63,7 @@ io.sockets.on('connection', function (socket) {
           socket.color = args[1];
           users[socket.username].color = args[1];
           socket.emit('updateuser', socket.username, socket.color);
+          socket.emit('set cookie', 'known', socket.username + ":" + socket.color);
           io.sockets.emit('updateusers', users);
         }
       } else {
