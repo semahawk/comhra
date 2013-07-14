@@ -86,6 +86,10 @@
           usersbox.html(inside);
         });
 
+        socket.on('set topic', function(newtopic){
+          $("#topic").html(newtopic);
+        });
+
         entry.keypress(function(e){
           if (e.which == 13){
             socket.emit('sendchat', entry.val());
@@ -104,8 +108,8 @@
     <div id="toolbar">
       <ul id="status">
         <li id="username"></a></li>
-        <!--<li>uptime: <span id="uptime">?</span></li>-->
-        <!--<li>memory: <span id="memory">?</span></li>-->
+        <li id="topic" style="padding-right: 30px; float: right;">topic</a></li>
+        <li class="clear"></li>
       </ul>
       <input tabindex="1" type="text" id="entry">
     </div>
