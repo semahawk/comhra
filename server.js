@@ -66,7 +66,22 @@ io.sockets.on('connection', function (socket) {
           socket.emit('set cookie', 'known', socket.username + ":" + socket.color);
           io.sockets.emit('updateusers', users);
         }
-      } else {
+      }
+      else if (args[0] == "/nick"){
+        if (args[0] === undefined){
+          socket.emit('updatetalk', 'SERVER', '#525252', "usage: /nick <NICK>", new Date().getTime() / 1000);
+        } else {
+          users[args[1]] = users[socket.username];
+          users[args[1]].name = args[1];
+          delete users[socket.username];
+          io.sockets.emit('updatetalk', 'SERVER', '#525252', socket.username + ' is now known as ' + args[1], new Date().getTime() / 1000);
+          socket.username = args[1];
+          socket.emit('updateuser', socket.username, socket.color);
+          socket.emit('set cookie', 'known', socket.username + ":" + socket.color);
+          io.sockets.emit('updateusers', users);
+        }
+      }
+      else {
         console.log(socket.username + ": " + data);
         io.sockets.emit('updatetalk', socket.username, socket.color, data, /* ugly ass hack */ new Date().getTime() / 1000);
         /* save the message into the database */
