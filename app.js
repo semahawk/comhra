@@ -26,6 +26,7 @@ var users = {};
 
 io.sockets.on('connection', function (socket) {
   socket.on('adduser', function(username, color){
+    socket.emit('clear');
     if (username == ""){
       username = "name_" + unknms++;
     }
