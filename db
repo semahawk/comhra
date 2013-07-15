@@ -27,6 +27,7 @@ if (!defined $ARGV[0] || $ARGV[0] eq "undefined"){
 usage: $0 fetch [limit]
      | $0 save <username> <color> <message>
      | $0 register <username> <password> [color]
+     | $0 login <username> <password>
      ;
 
 EOS
@@ -63,7 +64,7 @@ elsif ($ARGV[0] eq "register"){
     $ARGV[3] = "#525252";
   }
 
-  my $rows = $db->selectrow_array("select count(*) from users where login = '$ARGV[1]'", );
+  my $rows = $db->selectrow_array("select count(*) from users where login = '$ARGV[1]'");
 
   die "register: account '$ARGV[1]' already exists\n" if $rows > 0;
 
@@ -72,6 +73,22 @@ elsif ($ARGV[0] eq "register"){
 
   $db->do($stmt);
 }
-else { die "$0: unknown command '$ARGV[0]'\n" }
+elsif ($ARGV[0] eq "login"){
+  if (!defined $ARGV[1] || $ARGV[1] eq "undefined"){
+    die "usage: /login <username> <password>\n";
+  } elsif (!defined $ARGV[2] || $ARGV[2] eq "undefined"){
+    die "login: <password> not specified\n";
+  }
+
+  my $sql = "select * from users where login = ? and password = ?";
+  my @row = $db->selectrow_array($sql, undef, $ARGV[1], sha1_hex($ARGV[2]));
+
+  unless (@row){ die "login into account '$ARGV[1]' failed\n" }
+
+  print to_json \@row;
+}
+else {
+  die "$0: unknown command '$ARGV[0]'\n"
+}
 
 $db->disconnect;

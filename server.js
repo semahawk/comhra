@@ -36,7 +36,8 @@ io.sockets.on('connection', function (socket) {
     socket.username = username;
     socket.color = color;
     socket.ip = socket.handshake.address.address;
-    users[username] = { name: username, color: color, ip: socket.ip };
+    socket.perm = 0;
+    users[username] = { name: username, color: color, ip: socket.ip, perm: socket.perm };
     /* output the history logs */
     child = exec("./db fetch 30", function(err, stdout, stderr){
       if (err !== null){
@@ -98,6 +99,26 @@ io.sockets.on('connection', function (socket) {
             socket.emit('updatetalk', 'SERVER', '#525252', stderr, new Date().getTime() / 1000);
           } else {
             socket.emit('updatetalk', 'SERVER', '#525252', "successfuly registered an account '" + args[1] + "'", new Date().getTime() / 1000);
+          }
+        });
+      }
+      else if (args[0] == "/login"){
+        var cmd = "./db login '" + args[1] + "' '" + args[2] + "'";
+        child = exec(cmd, function(err, stdout, stderr){
+          if (err !== null){
+            console.log("ERR: saving to database failed: " + err);
+            socket.emit('updatetalk', 'SERVER', '#525252', stderr, new Date().getTime() / 1000);
+          } else {
+            socket.emit('updatetalk', 'SERVER', '#525252', "login into account '" + args[1] + "' successful", new Date().getTime() / 1000);
+            var newuser = JSON.parse(stdout);
+            delete users[socket.username];
+            users[newuser[1]] = { name: newuser[1], color: newuser[3], perm: parseInt(newuser[4]), ip: socket.ip };
+            socket.username = newuser[1];
+            socket.color = newuser[3];
+            socket.perm = parseInt(newuser[4]);
+            socket.emit('updateuser', socket.username, socket.color);
+            socket.emit('set cookie', 'known', socket.username + ":" + socket.color);
+            io.sockets.emit('updateusers', users);
           }
         });
       }
