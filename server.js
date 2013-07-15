@@ -82,15 +82,21 @@ io.sockets.on('connection', function (socket) {
         if (args[1] === undefined){
           socket.emit('updatetalk', 'SERVER', '#525252', "usage: /nick <NICK>", new Date().getTime() / 1000);
         } else {
-          var newname = args.splice(1).join(" ");
-          users[newname] = users[socket.username];
-          users[newname].name = newname;
-          delete users[socket.username];
-          io.sockets.emit('updatetalk', 'SERVER', '#525252', socket.username + ' is now known as ' + newname, new Date().getTime() / 1000);
-          socket.username = newname;
-          socket.emit('updateuser', socket.username, socket.color);
-          socket.emit('set cookie', 'known', socket.username + ":" + socket.color);
-          io.sockets.emit('updateusers', users);
+          /* let's check if there already is such user */
+          child = exec("./db fetch_user " + args[1], function(err, stdout, stderr){
+            if (err !== null){
+              var newname = args.splice(1).join(" ");
+              users[newname] = users[socket.username];
+              users[newname].name = newname;
+              delete users[socket.username];
+              io.sockets.emit('updatetalk', 'SERVER', '#525252', socket.username + ' is now known as ' + newname, new Date().getTime() / 1000);
+              socket.username = newname;
+              socket.emit('updateuser', socket.username, socket.color);
+              io.sockets.emit('updateusers', users);
+            } else {
+              socket.emit('updatetalk', 'SERVER', '#525252', "name '" + args[1] + "' has already been taken", new Date().getTime() / 1000);
+            }
+          });
         }
       }
       else if (args[0] == "/topic"){

@@ -25,6 +25,7 @@ if (!defined $ARGV[0] || $ARGV[0] eq "undefined"){
     die <<EOS;
 
 usage: $0 fetch [limit]
+     | $0 fetch_user <username>
      | $0 save <username> <color> <message>
      | $0 register <username> <password> [color]
      | $0 login <username> <password>
@@ -40,6 +41,18 @@ if ($ARGV[0] eq "fetch"){
   }
   my $res = $db->selectall_arrayref(qq/$stmt/);
   print to_json $res;
+}
+elsif ($ARGV[0] eq "fetch_user"){
+  if (!defined $ARGV[1]){
+    die "fetch_user: <username> not specified\n";
+  }
+
+  my $sql = "select * from users where login = ?";
+  my @row = $db->selectrow_array($sql, undef, $ARGV[1]);
+
+  die "user '$ARGV[0]' not found\n" unless @row;
+
+  print to_json \@row;
 }
 elsif ($ARGV[0] eq "save"){
   if (!defined $ARGV[1]){
