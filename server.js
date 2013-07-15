@@ -38,7 +38,7 @@ io.sockets.on('connection', function (socket) {
     socket.ip = socket.handshake.address.address;
     users[username] = { name: username, color: color, ip: socket.ip };
     /* output the history logs */
-    child = exec("./db fetch", function(err, stdout, stderr){
+    child = exec("./db fetch 30", function(err, stdout, stderr){
       if (err !== null){
         console.log("ERR: reading messages from database failed: " + err);
       } else {
