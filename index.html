@@ -11,6 +11,7 @@
       $(document).ready(function(){
         var unread = 0;
         var focus = true;
+        var banned = false;
 
         scrollDown = function(){
           window.scrollBy(0, 1000000);
@@ -65,10 +66,27 @@
         socket.on('disconnect', function(){
           $("#toolbar").css("background", "#525252");
           $(".message").css("color", "#525252");
-          setInterval(function(){
-            scrollDown();
-            socket.socket.reconnect();
-          }, 1000);
+          if (!banned){
+            setInterval(function(){
+              scrollDown();
+              socket.socket.reconnect();
+            }, 1000);
+          }
+        });
+
+        socket.on('banned', function(){
+          banned = true;
+          $('#toolbar').remove();
+          $('#entry').remove();
+          $('#usersbox').remove();
+          $('#talk').remove();
+          $('<div id="banned">').appendTo('body').html("BANNED<br><small>ouch</small>").css({
+            'width': '100%',
+            'text-align': 'center',
+            'margin-top': '100px', <!-- /* kind of hackish */ -->
+            'color': '#cc3333',
+            'font-size': '64px'
+          });
         });
 
         socket.on('set cookie', function(key, value){

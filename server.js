@@ -4,6 +4,8 @@ var app = express(),
     server = http.createServer(app),
     io = require('socket.io').listen(server, { log: false });
 
+var fs = require('fs');
+
 var sys = require('sys');
 var exec = require('child_process').exec;
 var child;
@@ -23,7 +25,21 @@ var users = {};
 
 io.sockets.on('connection', function (socket) {
   socket.on('user join', function(username, password){
+    /* let's clear his screen */
     socket.emit('clear');
+    /* let's see if that guy is on the blacklist */
+    fs.readFile('blacklist', function(err, data){
+      if (err) throw err;
+      var array = data.toString().split("\n");
+      for (i in array){
+        if (array[i] == socket.handshake.address.address){
+          console.log(array[i] + " is banned!");
+          socket.emit('banned');
+          socket.disconnect();
+          break;
+        }
+      }
+    });
     /* attempt to log the user in */
     var cmd = "./db login '" + username + "' '" + password + "' hashed";
     child = exec(cmd, function(err, stdout, stderr){
@@ -42,10 +58,13 @@ io.sockets.on('connection', function (socket) {
         socket.username = "noname";
         socket.color = '#525252';
         socket.perm = 0;
-        socket.ip = socket.handshake.address.address;
+        if (socket.handshake !== undefined)
+          socket.ip = socket.handshake.address.address;
+        else
+          socket.ip = '#unknown#gottafixit#';
         /* create the users 'slot' */
         users[socket.username] = { name: socket.username, color: socket.color, ip: socket.ip, perm: socket.perm };
-        console.log(socket.username + " (" + socket.handshake.address.address + ") has joined");
+        console.log(socket.username + " (" + socket.ip + ") has joined");
         io.sockets.emit('updateusers', users);
         socket.emit('updateuser', socket.username, socket.color);
       }
