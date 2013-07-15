@@ -87,7 +87,7 @@ io.sockets.on('connection', function (socket) {
         io.sockets.emit('set topic', args.splice(1).join(" "));
       }
       else if (args[0] == "/colors"){
-        socket.emit('updatetalk', 'SERVER', '#525252', 'colors: `qq `ww `ee `rr `tt `yy `uu `ii', new Date().getTime() / 1000);
+        socket.emit('updatetalk', 'SERVER', '#525252', 'colors: `q`q `w`w `e`e `r`r `t`t `y`y `u`u `i`i', new Date().getTime() / 1000);
       }
       else {
         console.log(socket.username + ": " + data);
