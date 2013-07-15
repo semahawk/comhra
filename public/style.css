@@ -140,3 +140,8 @@ a:hover {
 .clear {
   clear: both;
 }
+
+.colWhite { color: #fff; }
+.colBlue  { color: #336699; }
+.colGreen { color: #669966; }
+.colRed   { color: #dd3333; }

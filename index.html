@@ -30,7 +30,7 @@
         socket.on('connect', function(){
           scrollDown();
           var name, color;
-          if (handy.getCookie('known') !== null){
+          if (handy.getCookie('known')){
             name = handy.getCookie('known').split(":")[0];
             color = handy.getCookie('known').split(":")[1];
           } else {
@@ -55,7 +55,7 @@
         });
 
         socket.on('clear', function(){
-          $("#talk").html("");
+          $("#talk").empty();
         });
 
         socket.on('updateuser', function(username, color){
@@ -72,12 +72,26 @@
           if (re.exec(msg)){
             dateclass = "date_mentioned";
           }
+          /* sanitize user's name */
           username = handy.toStaticHTML(username);
+          /* make there be hearts */
           username = username.replace("&lt;3", "<span style='color: #cc3333';>&#x2665;</span>");
+          /* sanitize user's input */
           msg = handy.toStaticHTML(msg);
+          /* make there be hearts! */
           msg = msg.replace("&lt;3", "<span style='color: #cc3333';>&#x2665;</span>");
-          msg = msg.replace("3&gt;", "<span style='color: #cc3333';>&#x2665;</span>");
+          /* also, highlight any links, and make them clickable */
           msg = msg.replace(handy.urlRE, '<a target="_blank" href="$&">$&</a>');
+          /* append the first, white, color */
+          msg = "<span class='colWhite'>" + msg;
+          /* now, replace any `? with an appropriate color */
+          msg = msg.replace("`a", "</span><span class='colWhite'>");
+          msg = msg.replace("`b", "</span><span class='colBlue'>");
+          msg = msg.replace("`c", "</span><span class='colRed'>");
+          msg = msg.replace("`d", "</span><span class='colGreen'>");
+          /* and close any color that was the last */
+          msg = msg + "</span>";
+          /* now, actually append that message to the 'stream' */
           talk.append("<tr class='message'>" +
             "<td class='" + dateclass + "'>[" + handy.timeString(new Date(time)) + "]"+"</td>" +
             "<td class='nick' style='color: "+color+";'>&lt;" + username + "&gt;</td>" +
