@@ -80,8 +80,16 @@ elsif ($ARGV[0] eq "login"){
     die "login: <password> not specified\n";
   }
 
+  my $pass;
+
+  if (defined $ARGV[3] && $ARGV[3] eq "hashed"){
+    $pass = $ARGV[2];
+  } else {
+    $pass = sha1_hex($ARGV[2]);
+  }
+
   my $sql = "select * from users where login = ? and password = ?";
-  my @row = $db->selectrow_array($sql, undef, $ARGV[1], sha1_hex($ARGV[2]));
+  my @row = $db->selectrow_array($sql, undef, $ARGV[1], $pass);
 
   unless (@row){ die "login into account '$ARGV[1]' failed\n" }
 

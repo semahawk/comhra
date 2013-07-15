@@ -52,15 +52,14 @@
         socket.on('connect', function(){
           scrollDown();
           var name, color;
-          if (handy.getCookie('known')){
-            name = handy.getCookie('known').split(":")[0];
-            color = handy.getCookie('known').split(":")[1];
+          if (handy.getCookie('known') === null){
+            name = "##__unknown__##";
+            password = "##__unknown__##";
           } else {
-            name = prompt("Nick");
-            color = prompt("Kolor (w formacie /#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})/)");
+            name = handy.getCookie('known').split(":")[0];
+            password = handy.getCookie('known').split(":")[1];
           }
-          handy.setCookie('known', name + ":" + color, 60 * 60 * 24 * 7);
-          socket.emit('adduser', name, color);
+          socket.emit('user join', name, password);
         });
 
         socket.on('disconnect', function(){

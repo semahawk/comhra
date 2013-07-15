@@ -10,9 +10,6 @@ var child;
 
 var handy = require('./public/handy.js');
 
-/* number of current unknown names */
-var unknms = 0;
-
 server.listen(13013);
 
 app.use(express.static(__dirname + '/public'));
@@ -25,19 +22,34 @@ app.get('/', function (req, res) {
 var users = {};
 
 io.sockets.on('connection', function (socket) {
-  socket.on('adduser', function(username, color){
+  socket.on('user join', function(username, password){
     socket.emit('clear');
-    if (username == "" || username == "null"){
-      username = "name_" + unknms++;
-    }
-    if (color == "" || color == "null"){
-      color = "#525252";
-    }
-    socket.username = username;
-    socket.color = color;
-    socket.ip = socket.handshake.address.address;
-    socket.perm = 0;
-    users[username] = { name: username, color: color, ip: socket.ip, perm: socket.perm };
+    /* attempt to log the user in */
+    var cmd = "./db login '" + username + "' '" + password + "' hashed";
+    child = exec(cmd, function(err, stdout, stderr){
+      if (err === null){
+        var newuser = JSON.parse(stdout);
+        socket.username = newuser[1];
+        socket.color = newuser[3];
+        socket.perm = parseInt(newuser[4]);
+        socket.emit('set cookie', 'known', newuser[1] + ":" + newuser[2]);
+        /* create the users 'slot' */
+        users[socket.username] = { name: socket.username, color: socket.color, ip: socket.ip, perm: socket.perm };
+        console.log(socket.username + " (" + socket.handshake.address.address + ") has joined");
+        io.sockets.emit('updateusers', users);
+        socket.emit('updateuser', socket.username, socket.color);
+      } else {
+        socket.username = "noname";
+        socket.color = '#525252';
+        socket.perm = 0;
+        socket.ip = socket.handshake.address.address;
+        /* create the users 'slot' */
+        users[socket.username] = { name: socket.username, color: socket.color, ip: socket.ip, perm: socket.perm };
+        console.log(socket.username + " (" + socket.handshake.address.address + ") has joined");
+        io.sockets.emit('updateusers', users);
+        socket.emit('updateuser', socket.username, socket.color);
+      }
+    });
     /* output the history logs */
     child = exec("./db fetch 30", function(err, stdout, stderr){
       if (err !== null){
@@ -49,9 +61,6 @@ io.sockets.on('connection', function (socket) {
         }
       }
     });
-    console.log(username + " (" + socket.handshake.address.address + ") has joined");
-    io.sockets.emit('updateusers', users);
-    socket.emit('updateuser', socket.username, socket.color);
   });
 
   socket.on('sendchat', function (data) {
@@ -117,7 +126,7 @@ io.sockets.on('connection', function (socket) {
             socket.color = newuser[3];
             socket.perm = parseInt(newuser[4]);
             socket.emit('updateuser', socket.username, socket.color);
-            socket.emit('set cookie', 'known', socket.username + ":" + socket.color);
+            socket.emit('set cookie', 'known', socket.username + ":" + newuser[2]);
             io.sockets.emit('updateusers', users);
           }
         });
