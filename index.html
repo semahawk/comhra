@@ -9,6 +9,10 @@
     <link rel="stylesheet" href="/style.css" type="text/css">
     <script>
       $(document).ready(function(){
+        scrollDown = function(){
+          window.scrollBy(0, 1000000);
+        };
+
         var usersbox = $("#usersbox");
         var talk = $("#talk");
         var entry = $("#entry");
@@ -20,11 +24,11 @@
         /* focus on the input */
         entry.focus();
         /* scroll to the bottom */
-        window.scrollBy(0, 1000000);
+        scrollDown();
         $(".message").css("color", "#525252");
 
         socket.on('connect', function(){
-          window.scrollBy(0, 1000000);
+          scrollDown();
           var name, color;
           if (handy.getCookie('known') !== null){
             name = handy.getCookie('known').split(":")[0];
@@ -41,7 +45,7 @@
           $("#toolbar").css("background", "#525252");
           $(".message").css("color", "#525252");
           setInterval(function(){
-            window.scrollBy(0, 1000000);
+            scrollDown();
             socket.socket.reconnect();
           }, 1000);
         });
@@ -60,19 +64,24 @@
         });
 
         socket.on('updatetalk', function(username, color, msg, time){
+          var dateclass = "date";
           /* time passed here are seconds since epoch, but new Date() expects
              milliseconds */
           time *= 1000;
+          var re = new RegExp(username);
+          if (re.exec(msg)){
+            dateclass = "date_mentioned";
+          }
           msg = handy.toStaticHTML(msg);
           msg = msg.replace("&lt;3", "<span style='color: #cc3333';>&#x2665;</span>");
           msg = msg.replace("3&gt;", "<span style='color: #cc3333';>&#x2665;</span>");
           msg = msg.replace(handy.urlRE, '<a target="_blank" href="$&">$&</a>');
           talk.append("<tr class='message'>" +
-            "<td class='date'>[" + handy.timeString(new Date(time)) + "]"+"</td>" +
+            "<td class='" + dateclass + "'>[" + handy.timeString(new Date(time)) + "]"+"</td>" +
             "<td class='nick' style='color: "+color+";'>&lt;" + username + "&gt;</td>" +
             "<td class='msg-text'>" + msg + "</td>" +
           "</tr>");
-          window.scrollBy(0, 1000000);
+          scrollDown();
         });
 
         socket.on('updateusers', function(users){
@@ -93,7 +102,7 @@
         entry.keypress(function(e){
           if (e.which == 13){
             socket.emit('sendchat', entry.val());
-            window.scrollBy(0, 1000000);
+            scrollDown();
             entry.val("");
             entry.focus();
           }

@@ -79,7 +79,7 @@ a:hover {
 #talk {
   display: block;
   /* enough padding to clear the toolbar.. is there a better way to do this? */
-  padding-bottom: 90px;
+  padding-bottom: 94px;
   background: inherit;
   overflow: hidden;
   width: 82%;
@@ -100,6 +100,7 @@ a:hover {
   }
 
 .notice td, .join td, .part td, .message .date { color: #555555; }
+.message .date_mentioned { color: #888888; }
 .error td { color: #993333; }
 .personal .nick, .notice .nick { color: #ccdd55; }
 

@@ -72,7 +72,7 @@ io.sockets.on('connection', function (socket) {
         if (args[0] === undefined){
           socket.emit('updatetalk', 'SERVER', '#525252', "usage: /nick <NICK>", new Date().getTime() / 1000);
         } else {
-          var newname = args[0];
+          var newname = args.splice(1).join(" ");
           users[newname] = users[socket.username];
           users[newname].name = newname;
           delete users[socket.username];
