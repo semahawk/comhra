@@ -9,8 +9,19 @@
     <link rel="stylesheet" href="/style.css" type="text/css">
     <script>
       $(document).ready(function(){
+        var unread = 0;
+        var focus = true;
+
         scrollDown = function(){
           window.scrollBy(0, 1000000);
+        };
+
+        updateTitle = function(){
+          if (unread > 0){
+            document.title = unread + " - Braithreachas";
+          } else {
+            document.title = "Braitreachas";
+          }
         };
 
         var usersbox = $("#usersbox");
@@ -18,6 +29,17 @@
         var entry = $("#entry");
         var users = $("#users");
         var socket = io.connect('http://176.107.172.14:13013');
+
+        $(window).bind("blur", function(){
+          focus = false;
+          updateTitle();
+        });
+
+        $(window).bind("focus", function(){
+          focus = true;
+          unread = 0;
+          updateTitle();
+        });
 
         /* position the users box nicely */
         usersbox.css("left", talk.width());
@@ -102,6 +124,9 @@
             "<td class='msg-text'>" + msg + "</td>" +
           "</tr>");
           scrollDown();
+          if (!focus){
+            unread++;
+          }
         });
 
         socket.on('updateusers', function(users){
