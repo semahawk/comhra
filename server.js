@@ -131,6 +131,26 @@ io.sockets.on('connection', function (socket) {
           }
         });
       }
+      else if (args[0] == "/whois"){
+        var found = 0;
+        if (args[1] === undefined){
+          args[1] = socket.username;
+        }
+
+        for (var user in users){
+          if (user == args[1]){
+            found = user;
+          }
+        }
+
+        if (found){
+          var msg = 'name:  ' + users[found].name + '\ncolor: ' + users[found].color + '\nperm:  ' + users[found].perm + '\nip:    ' + users[found].ip;
+          console.log(msg);
+          socket.emit('updatetalk', 'WHOIS', '#525252', msg, new Date().getTime() / 1000);
+        } else {
+          socket.emit('updatetalk', 'WHOIS', '#525252', "user '"+args[1]+"' not found", new Date().getTime() / 1000);
+        }
+      }
       else {
         console.log(socket.username + ": " + data);
         io.sockets.emit('updatetalk', socket.username, socket.color, data, /* ugly ass hack */ new Date().getTime() / 1000);
