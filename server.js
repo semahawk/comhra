@@ -44,7 +44,7 @@ io.sockets.on('connection', function (socket) {
       } else {
         var messages = JSON.parse(stdout);
         for (var i = 0; i < messages.length; i++){
-          io.sockets.emit('updatetalk', messages[i][1], messages[i][2], messages[i][3], messages[i][4]);
+          socket.emit('updatetalk', messages[i][1], messages[i][2], messages[i][3], messages[i][4]);
         }
       }
     });
