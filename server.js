@@ -43,7 +43,7 @@ io.sockets.on('connection', function (socket) {
         console.log("ERR: reading messages from database failed: " + err);
       } else {
         var messages = JSON.parse(stdout);
-        for (var i = 0; i < messages.length; i++){
+        for (var i = messages.length - 1; i >= 0; i--){
           socket.emit('updatetalk', messages[i][1], messages[i][2], messages[i][3], messages[i][4]);
         }
       }
