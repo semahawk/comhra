@@ -17,14 +17,16 @@ use strict;
 use warnings;
 use DBI;
 use JSON;
+use Digest::SHA1 qw/sha1_hex/;
 
-my $db = DBI->connect("dbi:SQLite:messages.db") or die;
+my $db = DBI->connect("dbi:SQLite:database.db") or die "couldn't connect to the database!\n";
 
-if (!defined $ARGV[0]){
+if (!defined $ARGV[0] || $ARGV[0] eq "undefined"){
     die <<EOS;
 
 usage: $0 fetch [limit]
      | $0 save <username> <color> <message>
+     | $0 register <username> <password> [color]
      ;
 
 EOS
@@ -40,17 +42,36 @@ if ($ARGV[0] eq "fetch"){
 }
 elsif ($ARGV[0] eq "save"){
   if (!defined $ARGV[1]){
-    die "$0 save: <username> not specified";
+    die "save: <username> not specified\n";
   } elsif (!defined $ARGV[2]){
-    die "$0 save: <color> not specified";
+    die "save: <color> not specified\n";
   } elsif (!defined $ARGV[3]){
-    die "$0 save: <message> not specified";
+    die "save: <message> not specified\n";
   }
 
   my $stmt = "insert into messages(id, username, color, msg)" .
              "values(NULL, '$ARGV[1]', '$ARGV[2]', '$ARGV[3]')";
+
   $db->do($stmt);
 }
-else { die "$0: no command specified" }
+elsif ($ARGV[0] eq "register"){
+  if (!defined $ARGV[1] || $ARGV[1] eq "undefined"){
+    die "register: <username> not specified\n";
+  } elsif (!defined $ARGV[2] || $ARGV[2] eq "undefined"){
+    die "register: <password> not specified\n";
+  } elsif (!defined $ARGV[3] || $ARGV[3] eq "undefined"){
+    $ARGV[3] = "#525252";
+  }
+
+  my $rows = $db->selectrow_array("select count(*) from users where login = '$ARGV[1]'", );
+
+  die "register: account '$ARGV[1]' already exists\n" if $rows > 0;
+
+  my $stmt = "insert into users(id, login, password, perm, color)" .
+             "values(NULL, '$ARGV[1]', '" . sha1_hex($ARGV[2]) . "', 0, '$ARGV[3]')";
+
+  $db->do($stmt);
+}
+else { die "$0: unknown command '$ARGV[0]'\n" }
 
 $db->disconnect;

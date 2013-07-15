@@ -69,7 +69,7 @@ io.sockets.on('connection', function (socket) {
         }
       }
       else if (args[0] == "/nick"){
-        if (args[0] === undefined){
+        if (args[1] === undefined){
           socket.emit('updatetalk', 'SERVER', '#525252', "usage: /nick <NICK>", new Date().getTime() / 1000);
         } else {
           var newname = args.splice(1).join(" ");
@@ -88,6 +88,18 @@ io.sockets.on('connection', function (socket) {
       }
       else if (args[0] == "/colors"){
         socket.emit('updatetalk', 'SERVER', '#525252', 'colors: `q`q `w`w `e`e `r`r `t`t `y`y `u`u `i`i', new Date().getTime() / 1000);
+      }
+      else if (args[0] == "/register"){
+        /* insert that user into the database */
+        var cmd = "./db register '" + args[1] + "' '" + args[2] + "' '" + args[3] + "'";
+        child = exec(cmd, function(err, stdout, stderr){
+          if (err !== null){
+            console.log("ERR: saving to database failed: " + err);
+            socket.emit('updatetalk', 'SERVER', '#525252', stderr, new Date().getTime() / 1000);
+          } else {
+            socket.emit('updatetalk', 'SERVER', '#525252', "successfuly registered an account '" + args[1] + "'", new Date().getTime() / 1000);
+          }
+        });
       }
       else {
         console.log(socket.username + ": " + data);
