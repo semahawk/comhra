@@ -47,12 +47,23 @@ elsif ($ARGV[0] eq "fetch_user"){
     die "fetch_user: <username> not specified\n";
   }
 
-  my $sql = "select * from users where login = ?";
+  my $sql = "select * from users where login = ? limit 1";
   my @row = $db->selectrow_array($sql, undef, $ARGV[1]);
 
-  die "user '$ARGV[0]' not found\n" unless @row;
+  die "user '$ARGV[1]' not found\n" unless @row;
 
   print to_json \@row;
+}
+# update_user only updates the login, so far
+elsif ($ARGV[0] eq "update_user"){
+  if (!defined $ARGV[1]){
+    die "fetch_user: <id> not specified\n";
+  } elsif (!defined $ARGV[2]){
+    die "fetch_user: <login> not specified\n";
+  }
+
+  my $stmt = "update users set login = ? where id = ?";
+  my @row = $db->do($stmt, undef, $ARGV[2], $ARGV[1]);
 }
 elsif ($ARGV[0] eq "save"){
   if (!defined $ARGV[1]){

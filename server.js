@@ -82,10 +82,18 @@ io.sockets.on('connection', function (socket) {
         if (args[1] === undefined){
           socket.emit('updatetalk', 'SERVER', '#525252', "usage: /nick <NICK>", new Date().getTime() / 1000);
         } else {
+          var cmd = "./db fetch_user " + args[1];
           /* let's check if there already is such user */
-          child = exec("./db fetch_user " + args[1], function(err, stdout, stderr){
+          child = exec(cmd, function(err, stdout, stderr){
             if (err !== null){
-              var newname = args.splice(1).join(" ");
+              var newname = args[1];
+              var ch = exec("./db fetch_user " + socket.username, function(e,so,se){
+                if (e === null){
+                  var u = JSON.parse(so);
+                  var ch2 = exec("./db update_user '" + u[0] + "' '" + newname + "'", function(a,b,c){});
+                  socket.emit('set cookie', 'known', newname + ":" + u[2]);
+                }
+              });
               users[newname] = users[socket.username];
               users[newname].name = newname;
               delete users[socket.username];
