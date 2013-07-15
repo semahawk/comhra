@@ -72,6 +72,8 @@
           if (re.exec(msg)){
             dateclass = "date_mentioned";
           }
+          username = handy.toStaticHTML(username);
+          username = username.replace("&lt;3", "<span style='color: #cc3333';>&#x2665;</span>");
           msg = handy.toStaticHTML(msg);
           msg = msg.replace("&lt;3", "<span style='color: #cc3333';>&#x2665;</span>");
           msg = msg.replace("3&gt;", "<span style='color: #cc3333';>&#x2665;</span>");
