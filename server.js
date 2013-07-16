@@ -396,9 +396,9 @@ function cmd_perl(io, socket, args)
   io.sockets.emit('updatetalk', socket.username, socket.color, '/perl ' + code, new Date().getTime() / 1000);
   child = exec(final_code, function(err, stdout, stderr){
     if (err === null){
-      socket.emit('updatetalk', 'PERL', '#525252', stdout, new Date().getTime() / 1000);
+      io.sockets.emit('updatetalk', 'PERL', '#525252', stdout, new Date().getTime() / 1000);
     } else {
-      socket.emit('updatetalk', 'PERL', '#525252', stderr, new Date().getTime() / 1000);
+      io.sockets.emit('updatetalk', 'PERL', '#525252', stderr, new Date().getTime() / 1000);
     }
   });
   /* }}} */
