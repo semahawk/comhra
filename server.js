@@ -24,49 +24,64 @@ app.get('/', function (req, res) {
 var users = {};
 
 var cmds = {
+  help: {
+    args: [],
+    fn:   cmd_help,
+    help: "show this listing"
+  },
+
   color: {
     args: ['color'],
-    fn:   cmd_color
+    fn:   cmd_color,
+    help: "change your nick's color (RGB)"
   },
 
   colors: {
     args: [],
-    fn:   cmd_colors
+    fn:   cmd_colors,
+    help: "list the colors you can use in a conversation"
   },
 
   nick: {
     args: ['nick'],
-    fn:   cmd_nick
+    fn:   cmd_nick,
+    help: "change your nick"
   },
 
   whois: {
     args: ['nick'],
-    fn:   cmd_whois
+    fn:   cmd_whois,
+    help: "show some info about a given user"
   },
 
   topic: {
     args: ['newtopic'],
-    fn:   cmd_topic
+    fn:   cmd_topic,
+    help: "set the topic"
   },
 
   login: {
     args: ['nick', 'password'],
-    fn:   cmd_login
+    fn:   cmd_login,
+    help: "login to a user (remember to /register before)"
   },
 
   register: {
     args: ['nick', 'password'],
-    fn:   cmd_register
+    fn:   cmd_register,
+    help: "register a nick"
   },
 
   ban: {
     args: ['nick'],
-    fn:   cmd_ban
+    fn:   cmd_ban,
+    help: "ban a given user"
   },
 
   priv: {
     args: ['nick'],
-    fn:   cmd_priv
+    fn:   cmd_priv,
+    help: "send a private message"
   }
 };
 
@@ -170,6 +185,19 @@ io.sockets.on('connection', function (socket) {
     console.log(socket.username + " disconnected");
   });
 });
+
+function cmd_help(io, socket, args)
+{
+  /* {{{ help */
+  var msg = "";
+
+  for (var i in cmds){
+    msg += i + ' - ' + cmds[i].help + "\n";
+  }
+
+  socket.emit('updatetalk', 'HELP', '#525252', msg, new Date().getTime() / 1000);
+  /* }}} */
+}
 
 function cmd_color(io, socket, args)
 {
