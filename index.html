@@ -9,15 +9,38 @@
     <link rel="stylesheet" href="/style.css" type="text/css">
     <script>
       $(document).ready(function(){
+        var history = {
+          position: 0,
+          stack: [],
+
+          prev: function(){
+            if (this.position < this.stack.length)
+              this.position++;
+
+            return this.stack[this.stack.length - this.position];
+          },
+
+          next: function(){
+            if (this.position >= 2)
+              this.position--;
+            else {
+              this.position = 0;
+              return "";
+            }
+
+            return this.stack[this.stack.length - this.position];
+          }
+        };
+
         var unread = 0;
         var focus = true;
         var banned = false;
 
-        scrollDown = function(){
+        var scrollDown = function(){
           window.scrollBy(0, 1000000);
         };
 
-        updateTitle = function(){
+        var updateTitle = function(){
           if (unread > 0){
             document.title = unread + " - Braithreachas";
           } else {
@@ -164,12 +187,27 @@
           $("#topic").html(newtopic);
         });
 
-        entry.keypress(function(e){
+        entry.keydown(function(e){
+          /* enter */
           if (e.which == 13){
-            socket.emit('sendchat', entry.val());
+            var msg = entry.val();
+            socket.emit('sendchat', msg);
             scrollDown();
+            if (msg != history.stack[history.stack.length - 1])
+              history.stack.push(msg);
+            history.position = 0;
             entry.val("");
             entry.focus();
+          }
+          /* up arrow */
+          else if (e.which == 38){
+            e.preventDefault();
+            entry.attr("value", history.prev());
+          }
+          /* down arrow */
+          else if (e.which == 40){
+            e.preventDefault();
+            entry.attr("value", history.next());
           }
         });
       });
