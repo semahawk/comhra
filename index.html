@@ -140,7 +140,7 @@
           /* now, actually append that message to the 'stream' */
           talk.append("<tr class='message'>" +
             "<td class='" + dateclass + "'>[" + handy.timeString(new Date(time)) + "]"+"</td>" +
-            "<td class='nick' style='color: "+color+";'>&lt;" + username + "&gt;</td>" +
+            "<td class='nick'>&lt;<span style='color: "+color+";'>" + username + "</span>&gt;</td>" +
             "<td class='msg-text'>" + msg + "</td>" +
           "</tr>");
           scrollDown();
