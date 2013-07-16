@@ -88,17 +88,30 @@ io.sockets.on('connection', function (socket) {
       var args = data.split(" ");
       if (args[0] == "/color"){
         if (args[1] === undefined){
-          socket.emit('updatetalk', 'SERVER', "#525252", "usage: /color <COLOR>", new Date().getTime() / 1000);
+          socket.emit('updatetalk', 'SERVER', '#525252', "usage: /color <color>", new Date().getTime() / 1000);
         } else {
-          socket.color = args[1];
-          users[socket.username].color = args[1];
-          socket.emit('updateuser', socket.username, socket.color);
-          io.sockets.emit('updateusers', users);
+          var cmd = "./db fetch_user " + socket.username;
+          /* let's check if there already is such user */
+          child = exec(cmd, function(err, stdout, stderr){
+            if (err === null){
+              var newcolor = args[1];
+              var ch = exec("./db fetch_user " + socket.username, function(e,so,se){
+                if (e === null){
+                  var u = JSON.parse(so);
+                  var ch2 = exec("./db update_user '" + u[0] + "' '" + socket.username + "' '" + newcolor + "'", function(a,b,c){});
+                }
+              });
+              socket.color = newcolor;
+              users[socket.username].color = newcolor;
+              socket.emit('updateuser', socket.username, socket.color);
+              io.sockets.emit('updateusers', users);
+            }
+          });
         }
       }
       else if (args[0] == "/nick"){
         if (args[1] === undefined){
-          socket.emit('updatetalk', 'SERVER', '#525252', "usage: /nick <NICK>", new Date().getTime() / 1000);
+          socket.emit('updatetalk', 'SERVER', '#525252', "usage: /nick <nick>", new Date().getTime() / 1000);
         } else {
           var cmd = "./db fetch_user " + args[1];
           /* let's check if there already is such user */

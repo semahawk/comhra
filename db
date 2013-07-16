@@ -62,8 +62,17 @@ elsif ($ARGV[0] eq "update_user"){
     die "fetch_user: <login> not specified\n";
   }
 
-  my $stmt = "update users set login = ? where id = ?";
-  my @row = $db->do($stmt, undef, $ARGV[2], $ARGV[1]);
+  my $stmt;
+  my @row;
+
+  if (defined $ARGV[3]){
+    $stmt = "update users set login = ?, color = ? where id = ?";
+    @row = $db->do($stmt, undef, $ARGV[2], $ARGV[3], $ARGV[1]);
+  } else {
+    $stmt = "update users set login = ? where id = ?";
+    @row = $db->do($stmt, undef, $ARGV[2], $ARGV[1]);
+  }
+
 }
 elsif ($ARGV[0] eq "save"){
   if (!defined $ARGV[1]){
