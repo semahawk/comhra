@@ -131,6 +131,14 @@ io.sockets.on('connection', function (socket) {
         socket.emit('updateuser', socket.username, socket.color);
       }
     });
+    /* set the topic */
+    child = exec("./db get_setting 'topic'", function(err, stdout, stderr){
+      if (err !== null){
+        console.log("ERR: setting the topic failed: " + err);
+      } else {
+        socket.emit('set topic', JSON.parse(stdout)[2]);
+      }
+    });
     /* output the history logs */
     child = exec("./db fetch 30", function(err, stdout, stderr){
       if (err !== null){
@@ -285,7 +293,15 @@ function cmd_whois(io, socket, args)
 function cmd_topic(io, socket, args)
 {
   /* {{{ topic */
-  io.sockets.emit('set topic', args.slice(1).join(" "));
+  var newtopic = args.slice(1).join(" ");
+  var cmd = "./db set_setting 'topic' '" + newtopic + "'";
+  child = exec(cmd, function(err, stdout, stderr){
+    if (err !== null){
+      socket.emit('updatetalk', 'TOPIC', '#525252', stderr, new Date().getTime() / 1000);
+    } else {
+      io.sockets.emit('set topic', newtopic);
+    }
+  });
   /* }}} */
 }
 
@@ -365,3 +381,4 @@ function cmd_ban(io, socket, args)
   }
   /* }}} */
 }
+

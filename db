@@ -29,6 +29,8 @@ usage: $0 fetch [limit]
      | $0 save <username> <color> <message>
      | $0 register <username> <password> [color]
      | $0 login <username> <password>
+     | $0 set_setting <setting> <value>
+     | $0 get_setting <setting>
      ;
 
 EOS
@@ -72,7 +74,28 @@ elsif ($ARGV[0] eq "update_user"){
     $stmt = "update users set login = ? where id = ?";
     @row = $db->do($stmt, undef, $ARGV[2], $ARGV[1]);
   }
+}
+elsif ($ARGV[0] eq "set_setting"){
+  if (!defined $ARGV[1] || $ARGV[1] eq "undefined"){
+    die "<setting> not specified\n";
+  }
 
+  my $stmt = "update settings set value = ? where setting = ?";
+  my @row = $db->do($stmt, undef, $ARGV[2], $ARGV[1]);
+
+  die "setting setting '$ARGV[1]' failed\n" unless @row;
+}
+elsif ($ARGV[0] eq "get_setting"){
+  if (!defined $ARGV[1] || $ARGV[1] eq "undefined"){
+    die "<setting> not specified\n";
+  }
+
+  my $stmt = "select * from settings where setting = ?";
+  my @row = $db->selectrow_array($stmt, undef, $ARGV[1]);
+
+  die "getting setting '$ARGV[1]' failed\n" unless @row;
+
+  print to_json \@row;
 }
 elsif ($ARGV[0] eq "save"){
   if (!defined $ARGV[1]){
