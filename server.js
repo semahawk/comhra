@@ -82,6 +82,12 @@ var cmds = {
     args: ['nick'],
     fn:   cmd_priv,
     help: "send a private message"
+  },
+
+  perl: {
+    args: ['code'],
+    fn:   cmd_perl,
+    help: "run a bit of Perl"
   }
 };
 
@@ -379,6 +385,22 @@ function cmd_ban(io, socket, args)
   } else {
     socket.emit('updatetalk', 'BAN', '#525252', 'user \'' + args[1] + '\' is not logged in!', new Date().getTime() / 1000);
   }
+  /* }}} */
+}
+
+function cmd_perl(io, socket, args)
+{
+  /* {{{ perl */
+  var code = args.slice(1).join(" ").replace(/'/g, '"');
+  var final_code = "perl -e '" + code + "' < /dev/null";
+  io.sockets.emit('updatetalk', socket.username, socket.color, '/perl ' + code, new Date().getTime() / 1000);
+  child = exec(final_code, function(err, stdout, stderr){
+    if (err === null){
+      socket.emit('updatetalk', 'PERL', '#525252', stdout, new Date().getTime() / 1000);
+    } else {
+      socket.emit('updatetalk', 'PERL', '#525252', stderr, new Date().getTime() / 1000);
+    }
+  });
   /* }}} */
 }
 
