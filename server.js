@@ -23,6 +23,53 @@ app.get('/', function (req, res) {
 // meant to be passed to the client
 var users = {};
 
+var cmds = {
+  color: {
+    args: ['color'],
+    fn:   cmd_color
+  },
+
+  colors: {
+    args: [],
+    fn:   cmd_colors
+  },
+
+  nick: {
+    args: ['nick'],
+    fn:   cmd_nick
+  },
+
+  whois: {
+    args: ['nick'],
+    fn:   cmd_whois
+  },
+
+  topic: {
+    args: ['newtopic'],
+    fn:   cmd_topic
+  },
+
+  login: {
+    args: ['nick', 'password'],
+    fn:   cmd_login
+  },
+
+  register: {
+    args: ['nick', 'password'],
+    fn:   cmd_register
+  },
+
+  ban: {
+    args: ['nick'],
+    fn:   cmd_ban
+  },
+
+  priv: {
+    args: ['nick'],
+    fn:   cmd_priv
+  }
+};
+
 io.sockets.on('connection', function (socket) {
   socket.on('user join', function(username, password){
     /* let's clear his screen */
@@ -86,154 +133,25 @@ io.sockets.on('connection', function (socket) {
     /* do anything only when the message is not whitespace only */
     if (!handy.isBlank(data)){
       var args = data.split(" ");
-      if (args[0] == "/color"){
-        if (args[1] === undefined){
-          socket.emit('updatetalk', 'SERVER', '#525252', "usage: /color <color>", new Date().getTime() / 1000);
-        } else {
-          var cmd = "./db fetch_user " + socket.username;
-          /* let's check if there already is such user */
-          child = exec(cmd, function(err, stdout, stderr){
-            if (err === null){
-              var newcolor = args[1];
-              var ch = exec("./db fetch_user " + socket.username, function(e,so,se){
-                if (e === null){
-                  var u = JSON.parse(so);
-                  var ch2 = exec("./db update_user '" + u[0] + "' '" + socket.username + "' '" + newcolor + "'", function(a,b,c){});
-                }
-              });
-              socket.color = newcolor;
-              users[socket.username].color = newcolor;
-              socket.emit('updateuser', socket.username, socket.color);
-              io.sockets.emit('updateusers', users);
+      /*
+       * XXX that's a /command
+       */
+      if (args[0].slice(0, 1) == '/'){
+        var cmd = args[0].slice(1);
+        if (cmds[cmd] !== undefined){
+          if (args.slice(1).length < cmds[cmd].args.length){
+            var cmdargs = "";
+            for (var i in cmds[cmd].args){
+              cmdargs += "<" + cmds[cmd].args[i] + "> ";
             }
-          });
-        }
-      }
-      else if (args[0] == "/nick"){
-        if (args[1] === undefined){
-          socket.emit('updatetalk', 'SERVER', '#525252', "usage: /nick <nick>", new Date().getTime() / 1000);
-        } else {
-          var cmd = "./db fetch_user " + args[1];
-          /* let's check if there already is such user */
-          child = exec(cmd, function(err, stdout, stderr){
-            if (err !== null){
-              var newname = args[1];
-              var ch = exec("./db fetch_user " + socket.username, function(e,so,se){
-                if (e === null){
-                  var u = JSON.parse(so);
-                  var ch2 = exec("./db update_user '" + u[0] + "' '" + newname + "'", function(a,b,c){});
-                  socket.emit('set cookie', 'known', newname + ":" + u[2]);
-                }
-              });
-              users[newname] = users[socket.username];
-              users[newname].name = newname;
-              delete users[socket.username];
-              io.sockets.emit('updatetalk', 'SERVER', '#525252', socket.username + ' is now known as ' + newname, new Date().getTime() / 1000);
-              socket.username = newname;
-              socket.emit('updateuser', socket.username, socket.color);
-              io.sockets.emit('updateusers', users);
-            } else {
-              socket.emit('updatetalk', 'SERVER', '#525252', "name '" + args[1] + "' has already been taken", new Date().getTime() / 1000);
-            }
-          });
-        }
-      }
-      else if (args[0] == "/topic"){
-        io.sockets.emit('set topic', args.splice(1).join(" "));
-      }
-      else if (args[0] == "/colors"){
-        socket.emit('updatetalk', 'SERVER', '#525252', 'colors: `q`q `w`w `e`e `r`r `t`t `y`y `u`u `i`i', new Date().getTime() / 1000);
-      }
-      else if (args[0] == "/register"){
-        /* insert that user into the database */
-        var cmd = "./db register '" + args[1] + "' '" + args[2] + "' '" + args[3] + "'";
-        child = exec(cmd, function(err, stdout, stderr){
-          if (err !== null){
-            console.log("ERR: saving to database failed: " + err);
-            socket.emit('updatetalk', 'SERVER', '#525252', stderr, new Date().getTime() / 1000);
+            socket.emit('updatetalk', cmd.toUpperCase(), '#525252', 'usage: /' + cmd + ' ' + cmdargs, new Date().getTime() / 1000);
           } else {
-            socket.emit('updatetalk', 'SERVER', '#525252', "successfuly registered an account '" + args[1] + "'", new Date().getTime() / 1000);
+            cmds[cmd].fn(io, socket, data.split(" ").slice());
           }
-        });
-      }
-      else if (args[0] == "/login"){
-        var cmd = "./db login '" + args[1] + "' '" + args[2] + "'";
-        child = exec(cmd, function(err, stdout, stderr){
-          if (err !== null){
-            console.log("ERR: saving to database failed: " + err);
-            socket.emit('updatetalk', 'SERVER', '#525252', stderr, new Date().getTime() / 1000);
-          } else {
-            socket.emit('updatetalk', 'SERVER', '#525252', "login into account '" + args[1] + "' successful", new Date().getTime() / 1000);
-            var newuser = JSON.parse(stdout);
-            delete users[socket.username];
-            users[newuser[1]] = { name: newuser[1], color: newuser[3], perm: parseInt(newuser[4]), ip: socket.ip };
-            socket.username = newuser[1];
-            socket.color = newuser[3];
-            socket.perm = parseInt(newuser[4]);
-            socket.emit('updateuser', socket.username, socket.color);
-            socket.emit('set cookie', 'known', socket.username + ":" + newuser[2]);
-            io.sockets.emit('updateusers', users);
-          }
-        });
-      }
-      else if (args[0] == "/whois"){
-        var found = 0;
-        if (args[1] === undefined){
-          args[1] = socket.username;
-        }
-
-        for (var user in users){
-          if (user == args[1]){
-            found = user;
-          }
-        }
-
-        if (found){
-          var msg = 'name:  ' + users[found].name + '\ncolor: ' + users[found].color + '\nperm:  ' + users[found].perm + '\nip:    ' + users[found].ip;
-          console.log(msg);
-          socket.emit('updatetalk', 'WHOIS', '#525252', msg, new Date().getTime() / 1000);
         } else {
-          socket.emit('updatetalk', 'WHOIS', '#525252', "user '"+args[1]+"' not found", new Date().getTime() / 1000);
+          socket.emit('updatetalk', 'SERVER', '#525252', "unknown command '" + cmd + "'", new Date().getTime() / 1000);
         }
-      }
-      else if (args[0] == "/ban"){
-        if (args[1] === undefined){
-          socket.emit('updatetalk', 'SERVER', '#525252', 'usage: /ban <nick>', new Date().getTime() / 1000);
-        } else {
-          if (users[args[1]] !== undefined){
-            fs.appendFile('blacklist', users[args[1]].ip + "\n", function(err){
-              if (err !== null){
-                console.log('ERR: appending ip to the blacklist: ' + err);
-                socket.emit('updatetalk', 'BAN', '#525252', err, new Date().getTime() / 1000);
-              } else {
-                io.sockets.emit('updatetalk', 'BAN', '#525252', 'user \'' + args[1] + '\' (' + users[args[1]].ip + ') was banned!', new Date().getTime() / 1000);
-                io.sockets.socket(users[args[1]].id).emit('banned');
-                io.sockets.socket(users[args[1]].id).disconnect();
-              }
-            });
-          } else {
-            socket.emit('updatetalk', 'BAN', '#525252', 'user \'' + args[1] + '\' is not logged in!', new Date().getTime() / 1000);
-          }
-        }
-      }
-      else if (args[0] == "/priv"){
-        if (args[1] === undefined){
-          socket.emit('updatetalk', 'SERVER', '#525252', 'usage: /priv <nick> <message>', new Date().getTime() / 1000);
-        } else {
-          if (users[args[1]] !== undefined){
-            if (args.length > 2){
-              var msg = args.splice(2).join(" ");
-              io.sockets.socket(users[args[1]].id).emit('updatetalk', users[args[1]].name + '»' + socket.username, socket.color, msg, new Date().getTime() / 1000);
-              socket.emit('updatetalk', socket.username + "»" + users[args[1]].name, users[args[1]].color, msg, new Date().getTime() / 1000);
-            } else {
-              socket.emit('updatetalk', 'SERVER', '#525252', 'usage: /priv <nick> <message>', new Date().getTime() / 1000);
-            }
-          } else {
-            socket.emit('updatetalk', 'PRIV', '#525252', 'user \'' + args[1] + '\' is not logged in!', new Date().getTime() / 1000);
-          }
-        }
-      }
-      else {
+      } else {
         console.log(socket.username + ": " + data);
         io.sockets.emit('updatetalk', socket.username, socket.color, data, /* ugly ass hack */ new Date().getTime() / 1000);
         /* save the message into the database */
@@ -252,3 +170,170 @@ io.sockets.on('connection', function (socket) {
     console.log(socket.username + " disconnected");
   });
 });
+
+function cmd_color(io, socket, args)
+{
+  /* {{{ color */
+  var cmd = "./db fetch_user " + socket.username;
+  /* let's check if there already is such user */
+  child = exec(cmd, function(err, stdout, stderr){
+    if (err === null){
+      var newcolor = args[1];
+      var ch = exec("./db fetch_user " + socket.username, function(e,so,se){
+        if (e === null){
+          var u = JSON.parse(so);
+          var ch2 = exec("./db update_user '" + u[0] + "' '" + socket.username + "' '" + newcolor + "'", function(a,b,c){});
+        }
+      });
+      socket.color = newcolor;
+      users[socket.username].color = newcolor;
+      socket.emit('updateuser', socket.username, socket.color);
+      io.sockets.emit('updateusers', users);
+    }
+  });
+  /* }}} */
+}
+
+function cmd_colors(io, socket, args)
+{
+  /* {{{ colors */
+  socket.emit('updatetalk', 'SERVER', '#525252', 'colors: `q`q `w`w `e`e `r`r `t`t `y`y `u`u `i`i', new Date().getTime() / 1000);
+  /* }}} */
+}
+
+function cmd_nick(io, socket, args)
+{
+  /* {{{ nick */
+  var cmd = "./db fetch_user " + args[1];
+  /* let's check if there already is such user */
+  child = exec(cmd, function(err, stdout, stderr){
+    if (err !== null){
+      var newname = args[1];
+      var ch = exec("./db fetch_user " + socket.username, function(e,so,se){
+        if (e === null){
+          var u = JSON.parse(so);
+          var ch2 = exec("./db update_user '" + u[0] + "' '" + newname + "'", function(a,b,c){});
+          socket.emit('set cookie', 'known', newname + ":" + u[2]);
+        }
+      });
+      users[newname] = users[socket.username];
+      users[newname].name = newname;
+      delete users[socket.username];
+      io.sockets.emit('updatetalk', 'SERVER', '#525252', socket.username + ' is now known as ' + newname, new Date().getTime() / 1000);
+      socket.username = newname;
+      socket.emit('updateuser', socket.username, socket.color);
+      io.sockets.emit('updateusers', users);
+    } else {
+      socket.emit('updatetalk', 'SERVER', '#525252', "name '" + args[1] + "' has already been taken", new Date().getTime() / 1000);
+    }
+  });
+  /* }}} */
+}
+
+function cmd_whois(io, socket, args)
+{
+  /* {{{ whois */
+  var found = 0;
+  if (args[1] === undefined){
+    args[1] = socket.username;
+  }
+
+  for (var user in users){
+    if (user == args[1]){
+      found = user;
+    }
+  }
+
+  if (found){
+    var msg = 'name:  ' + users[found].name + '\ncolor: ' + users[found].color + '\nperm:  ' + users[found].perm + '\nip:    ' + users[found].ip;
+    console.log(msg);
+    socket.emit('updatetalk', 'WHOIS', '#525252', msg, new Date().getTime() / 1000);
+  } else {
+    socket.emit('updatetalk', 'WHOIS', '#525252', "user '"+args[1]+"' not found", new Date().getTime() / 1000);
+  }
+  /* }}} */
+}
+
+function cmd_topic(io, socket, args)
+{
+  /* {{{ topic */
+  io.sockets.emit('set topic', args.slice(1).join(" "));
+  /* }}} */
+}
+
+function cmd_login(io, socket, args)
+{
+  /* {{{ login */
+  var cmd = "./db login '" + args[1] + "' '" + args[2] + "'";
+  child = exec(cmd, function(err, stdout, stderr){
+    if (err !== null){
+      console.log("ERR: saving to database failed: " + err);
+      socket.emit('updatetalk', 'SERVER', '#525252', stderr, new Date().getTime() / 1000);
+    } else {
+      socket.emit('updatetalk', 'SERVER', '#525252', "login into account '" + args[1] + "' successful", new Date().getTime() / 1000);
+      var newuser = JSON.parse(stdout);
+      delete users[socket.username];
+      users[newuser[1]] = { name: newuser[1], color: newuser[3], perm: parseInt(newuser[4]), ip: socket.ip };
+      socket.username = newuser[1];
+      socket.color = newuser[3];
+      socket.perm = parseInt(newuser[4]);
+      socket.emit('updateuser', socket.username, socket.color);
+      socket.emit('set cookie', 'known', socket.username + ":" + newuser[2]);
+      io.sockets.emit('updateusers', users);
+    }
+  });
+  /* }}} */
+}
+
+function cmd_register(io, socket, args)
+{
+  /* {{{ register */
+  /* insert that user into the database */
+  var cmd = "./db register '" + args[1] + "' '" + args[2] + "' '" + args[3] + "'";
+  child = exec(cmd, function(err, stdout, stderr){
+    if (err !== null){
+      console.log("ERR: saving to database failed: " + err);
+      socket.emit('updatetalk', 'SERVER', '#525252', stderr, new Date().getTime() / 1000);
+    } else {
+      socket.emit('updatetalk', 'SERVER', '#525252', "successfuly registered an account '" + args[1] + "'", new Date().getTime() / 1000);
+    }
+  });
+  /* }}} */
+}
+
+function cmd_priv(io, socket, args)
+{
+  /* {{{ priv */
+  if (users[args[1]] !== undefined){
+    if (args.length > 2){
+      var msg = args.slice(2).join(" ");
+      io.sockets.socket(users[args[1]].id).emit('updatetalk', users[args[1]].name + '»' + socket.username, socket.color, msg, new Date().getTime() / 1000);
+      socket.emit('updatetalk', socket.username + "»" + users[args[1]].name, users[args[1]].color, msg, new Date().getTime() / 1000);
+    } else {
+      socket.emit('updatetalk', 'SERVER', '#525252', 'usage: /priv <nick> <message>', new Date().getTime() / 1000);
+    }
+  } else {
+    socket.emit('updatetalk', 'PRIV', '#525252', 'user \'' + args[1] + '\' is not logged in!', new Date().getTime() / 1000);
+  }
+  /* }}} */
+}
+
+function cmd_ban(io, socket, args)
+{
+  /* {{{ ban */
+  if (users[args[1]] !== undefined){
+    fs.appendFile('blacklist', users[args[1]].ip + "\n", function(err){
+      if (err !== null){
+        console.log('ERR: appending ip to the blacklist: ' + err);
+        socket.emit('updatetalk', 'BAN', '#525252', err, new Date().getTime() / 1000);
+      } else {
+        io.sockets.emit('updatetalk', 'BAN', '#525252', 'user \'' + args[1] + '\' (' + users[args[1]].ip + ') was banned!', new Date().getTime() / 1000);
+        io.sockets.socket(users[args[1]].id).emit('banned');
+        io.sockets.socket(users[args[1]].id).disconnect();
+      }
+    });
+  } else {
+    socket.emit('updatetalk', 'BAN', '#525252', 'user \'' + args[1] + '\' is not logged in!', new Date().getTime() / 1000);
+  }
+  /* }}} */
+}
