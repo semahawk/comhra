@@ -392,7 +392,7 @@ function cmd_perl(io, socket, args)
 {
   /* {{{ perl */
   var code = args.slice(1).join(" ").replace(/'/g, '"');
-  var final_code = "perl -e '" + code + "' < /dev/null";
+  var final_code = "sudo -u nobody perl -e '" + code + "' < /dev/null";
   io.sockets.emit('updatetalk', socket.username, socket.color, '/perl ' + code, new Date().getTime() / 1000);
   child = exec(final_code, function(err, stdout, stderr){
     if (err === null){
