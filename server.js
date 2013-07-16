@@ -50,7 +50,7 @@ io.sockets.on('connection', function (socket) {
         socket.perm = parseInt(newuser[4]);
         socket.emit('set cookie', 'known', newuser[1] + ":" + newuser[2]);
         /* create the users 'slot' */
-        users[socket.username] = { name: socket.username, color: socket.color, ip: socket.ip, perm: socket.perm };
+        users[socket.username] = { id: socket.id, name: socket.username, color: socket.color, ip: socket.ip, perm: socket.perm };
         console.log(socket.username + " (" + socket.handshake.address.address + ") has joined");
         io.sockets.emit('updateusers', users);
         socket.emit('updateuser', socket.username, socket.color);
@@ -63,7 +63,7 @@ io.sockets.on('connection', function (socket) {
         else
           socket.ip = '#unknown#gottafixit#';
         /* create the users 'slot' */
-        users[socket.username] = { name: socket.username, color: socket.color, ip: socket.ip, perm: socket.perm };
+        users[socket.username] = { id: socket.id, name: socket.username, color: socket.color, ip: socket.ip, perm: socket.perm };
         console.log(socket.username + " (" + socket.ip + ") has joined");
         io.sockets.emit('updateusers', users);
         socket.emit('updateuser', socket.username, socket.color);
@@ -93,7 +93,6 @@ io.sockets.on('connection', function (socket) {
           socket.color = args[1];
           users[socket.username].color = args[1];
           socket.emit('updateuser', socket.username, socket.color);
-          socket.emit('set cookie', 'known', socket.username + ":" + socket.color);
           io.sockets.emit('updateusers', users);
         }
       }
@@ -182,6 +181,26 @@ io.sockets.on('connection', function (socket) {
           socket.emit('updatetalk', 'WHOIS', '#525252', msg, new Date().getTime() / 1000);
         } else {
           socket.emit('updatetalk', 'WHOIS', '#525252', "user '"+args[1]+"' not found", new Date().getTime() / 1000);
+        }
+      }
+      else if (args[0] == "/ban"){
+        if (args[1] === undefined){
+          socket.emit('updatetalk', 'SERVER', '#525252', 'usage: /ban <nick>', new Date().getTime() / 1000);
+        } else {
+          if (users[args[1]] !== undefined){
+            fs.appendFile('blacklist', users[args[1]].ip + "\n", function(err){
+              if (err !== null){
+                console.log('ERR: appending ip to the blacklist: ' + err);
+                socket.emit('updatetalk', 'BAN', '#525252', err, new Date().getTime() / 1000);
+              } else {
+                io.sockets.emit('updatetalk', 'BAN', '#525252', 'user \'' + args[1] + '\' (' + users[args[1]].ip + ') was banned!', new Date().getTime() / 1000);
+                io.sockets.socket(users[args[1]].id).emit('banned');
+                io.sockets.socket(users[args[1]].id).disconnect();
+              }
+            });
+          } else {
+            socket.emit('updatetalk', 'BAN', '#525252', 'user \'' + args[1] + '\' is not logged in!', new Date().getTime() / 1000);
+          }
         }
       }
       else {
