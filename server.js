@@ -129,7 +129,7 @@ io.sockets.on('connection', function (socket) {
   process.stdin.resume();
   process.stdin.setEncoding('utf8');
   process.stdin.on('data', function(chunk){
-    io.sockets.emit('updatetalk', 'SERVER', '#525252', chunk, new Date().getTime() / 1000);
+    socket.broadcast.emit('updatetalk', 'SERVER', '#525252', chunk, new Date().getTime() / 1000);
   });
 
   socket.on('user join', function(username, password){
