@@ -52,11 +52,13 @@
 
         $(window).bind("blur", function(){
           focus = false;
+          socket.emit('user gone');
         });
 
         $(window).bind("focus", function(){
           focus = true;
           unread = 0;
+          socket.emit('user back');
           document.title = "Braithreachas";
         });
 
@@ -84,6 +86,7 @@
         socket.on('disconnect', function(){
           $("#toolbar").css("background", "#525252");
           $(".message").css("color", "#525252");
+          $("html body *").css("color", "#5252525");
           if (!banned){
             setInterval(function(){
               scrollDown();
@@ -169,11 +172,12 @@
         });
 
         socket.on('updateusers', function(users){
-          var userscount = 0;
           var inside = "<ul>";
+          var prefix = "&nbsp;";
           for (var user in users){
-            inside += "<li style='color: " + users[user].color + ";'>" + users[user].name + "</li>";
-            userscount++;
+            if (users[user].active)
+              prefix = "&middot;";
+            inside += "<li style='color: " + users[user].color + ";'>" + prefix + users[user].name + "</li>";
           }
           inside += "</ul>";
           usersbox.html(inside);

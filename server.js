@@ -162,7 +162,7 @@ io.sockets.on('connection', function (socket) {
           socket.ip = '#unknown#gottafixit#';
         socket.emit('set cookie', 'known', newuser[1] + ":" + newuser[2]);
         /* create the users 'slot' */
-        users[socket.username] = { id: socket.id, name: socket.username, color: socket.color, ip: socket.ip, perm: socket.perm };
+        users[socket.username] = { id: socket.id, name: socket.username, color: socket.color, ip: socket.ip, perm: socket.perm, active: true };
         console.log(socket.username + " (" + socket.handshake.address.address + ") has joined");
         io.sockets.emit('updateusers', users);
         socket.emit('updateuser', socket.username, socket.color);
@@ -170,12 +170,13 @@ io.sockets.on('connection', function (socket) {
         socket.username = "name_" + unknms++;
         socket.color = '#525252';
         socket.perm = 0;
+        socket.active = true;
         if (socket.handshake !== undefined)
           socket.ip = socket.handshake.address.address;
         else
           socket.ip = '#unknown#gottafixit#';
         /* create the users 'slot' */
-        users[socket.username] = { id: socket.id, name: socket.username, color: socket.color, ip: socket.ip, perm: socket.perm };
+        users[socket.username] = { id: socket.id, name: socket.username, color: socket.color, ip: socket.ip, perm: socket.perm, active: true };
         console.log(socket.username + " (" + socket.ip + ") has joined");
         io.sockets.emit('updateusers', users);
         socket.emit('updateuser', socket.username, socket.color);
@@ -257,6 +258,18 @@ io.sockets.on('connection', function (socket) {
   socket.on('disconnect', function(){
     delete users[socket.username];
     console.log(socket.username + " disconnected");
+    io.sockets.emit('updateusers', users);
+  });
+
+  socket.on('user gone', function(){
+    if (users[socket.username] !== undefined)
+      users[socket.username].active = false;
+    io.sockets.emit('updateusers', users);
+  });
+
+  socket.on('user back', function(){
+    if (users[socket.username] !== undefined)
+      users[socket.username].active = true;
     io.sockets.emit('updateusers', users);
   });
 });
