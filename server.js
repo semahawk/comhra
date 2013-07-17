@@ -27,11 +27,12 @@ var users = {};
 /*
  * Permission bits:
  *
- *   topic: 1 << 0
- *   perl:  1 << 1
- *   ban:   1 << 2
- *   chmod: 1 << 3 // that one is kind of the most valuable
- *                 // ie. that's the Oficerish bit
+ *   registered: 1 << 0
+ *   topic:      1 << 1
+ *   perl:       1 << 2
+ *   ban:        1 << 3
+ *   chmod:      1 << 4 // that one is kind of the most valuable
+ *                      // ie. that's the Oficerish bit
  *
  */
 var cmds = {
@@ -71,7 +72,7 @@ var cmds = {
     help: "set the topic",
     perm: {
       ch: 't',
-      bit: 1 << 0
+      bit: 1 << 1
     }
   },
 
@@ -93,7 +94,7 @@ var cmds = {
     help: "ban a given user",
     perm: {
       ch: 'b',
-      bit: 1 << 2
+      bit: 1 << 3
     }
   },
 
@@ -109,7 +110,7 @@ var cmds = {
     help: "run a bit of Perl",
     perm: {
       ch: 'p',
-      bit: 1 << 1
+      bit: 1 << 2
     }
   },
 
@@ -119,7 +120,7 @@ var cmds = {
     help: "change user's permissions",
     perm: {
       ch: 'o',
-      bit: 1 << 3
+      bit: 1 << 4
     }
   }
 };
@@ -411,6 +412,11 @@ function cmd_register(io, socket, args)
 function cmd_priv(io, socket, args)
 {
   /* {{{ priv */
+  if (socket.perm == 0){
+    socket.emit('updatetalk', 'SERVER', '#525252', '/priv is only available for logged in users', new Date().getTime() / 1000);
+    return;
+  }
+
   if (users[args[1]] !== undefined){
     if (args.length > 2){
       var msg = args.slice(2).join(" ");

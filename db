@@ -131,7 +131,7 @@ elsif ($ARGV[0] eq "register"){
   die "register: account '$ARGV[1]' already exists\n" if $rows > 0;
 
   my $stmt = "insert into users(id, login, password, perm, color)" .
-             "values(NULL, '$ARGV[1]', '" . sha1_hex($ARGV[2]) . "', 0, '$ARGV[3]')";
+             "values(NULL, '$ARGV[1]', '" . sha1_hex($ARGV[2]) . "', 1, '$ARGV[3]')";
 
   $db->do($stmt);
 }
