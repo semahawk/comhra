@@ -20,6 +20,7 @@ app.get('/', function (req, res) {
   res.sendfile(__dirname + '/index.html');
 });
 
+var unknms = 0;
 // meant to be passed to the client
 var users = {};
 
@@ -159,7 +160,7 @@ io.sockets.on('connection', function (socket) {
         io.sockets.emit('updateusers', users);
         socket.emit('updateuser', socket.username, socket.color);
       } else {
-        socket.username = "noname";
+        socket.username = "name_" + unknms++;
         socket.color = '#525252';
         socket.perm = 0;
         if (socket.handshake !== undefined)
