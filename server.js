@@ -23,6 +23,14 @@ app.get('/', function (req, res) {
 // meant to be passed to the client
 var users = {};
 
+/*
+ * Permission bits:
+ *
+ *   topic: 1 << 0
+ *   perl:  1 << 1
+ *   ban:   1 << 2
+ *
+ */
 var cmds = {
   help: {
     args: [],
@@ -43,7 +51,7 @@ var cmds = {
   },
 
   nick: {
-    args: ['nick'],
+    args: [],
     fn:   cmd_nick,
     help: "change your nick"
   },
@@ -57,7 +65,11 @@ var cmds = {
   topic: {
     args: ['newtopic'],
     fn:   cmd_topic,
-    help: "set the topic"
+    help: "set the topic",
+    perm: {
+      ch: 't',
+      bit: 1 << 0
+    }
   },
 
   login: {
@@ -75,7 +87,11 @@ var cmds = {
   ban: {
     args: ['nick'],
     fn:   cmd_ban,
-    help: "ban a given user"
+    help: "ban a given user",
+    perm: {
+      ch: 'b',
+      bit: 1 << 2
+    }
   },
 
   priv: {
@@ -87,7 +103,11 @@ var cmds = {
   perl: {
     args: ['code'],
     fn:   cmd_perl,
-    help: "run a bit of Perl"
+    help: "run a bit of Perl",
+    perm: {
+      ch: 'p',
+      bit: 1 << 1
+    }
   }
 };
 
@@ -175,7 +195,21 @@ io.sockets.on('connection', function (socket) {
             }
             socket.emit('updatetalk', cmd.toUpperCase(), '#525252', 'usage: /' + cmd + ' ' + cmdargs, new Date().getTime() / 1000);
           } else {
-            cmds[cmd].fn(io, socket, data.split(" ").slice());
+            /* check for the permissions */
+            if (cmds[cmd].perm === undefined){
+              /* here, the command has no permissions defined, so we allow the
+               * user to run the command */
+              cmds[cmd].fn(io, socket, data.split(" ").slice());
+            } else {
+              if (socket.perm & cmds[cmd].perm.bit){
+                /* here, the user has the right bit set */
+                cmds[cmd].fn(io, socket, data.split(" ").slice());
+              } else {
+                /* here, he has not */
+                socket.emit('updatetalk', 'SERVER', '#525252', cmd + ': permission denied', new Date().getTime() / 1000);
+                /* mwahahahahahahaha */
+              }
+            }
           }
         } else {
           socket.emit('updatetalk', 'SERVER', '#525252', "unknown command '" + cmd + "'", new Date().getTime() / 1000);
@@ -287,7 +321,7 @@ function cmd_whois(io, socket, args)
   }
 
   if (found){
-    var msg = 'name:  ' + users[found].name + '\ncolor: ' + users[found].color + '\nperm:  ' + users[found].perm + '\nip:    ' + users[found].ip;
+    var msg = 'name:  ' + users[found].name + '\ncolor: ' + users[found].color + '\nperm: ' + users[found].perm.toString(2) + '\nip: ' + users[found].ip;
     console.log(msg);
     socket.emit('updatetalk', 'WHOIS', '#525252', msg, new Date().getTime() / 1000);
   } else {
