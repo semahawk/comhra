@@ -337,7 +337,10 @@ function cmd_whois(io, socket, args)
   }
 
   if (found){
-    var msg = 'name:  ' + users[found].name + '\ncolor: ' + users[found].color + '\nperm: ' + users[found].perm.toString(2) + '\nip: ' + users[found].ip;
+    var msg = 'name:  ' + users[found].name + '\ncolor: ' + users[found].color + '\nperm: ' + users[found].perm.toString(2);
+    if (socket.perm & cmds['chmod'].perm.bit){
+      msg += '\nip: ' + users[found].ip;
+    }
     socket.emit('updatetalk', 'WHOIS', '#525252', msg, new Date().getTime() / 1000);
   } else {
     socket.emit('updatetalk', 'WHOIS', '#525252', "user '"+args[1]+"' not found", new Date().getTime() / 1000);
