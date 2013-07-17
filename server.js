@@ -98,7 +98,7 @@ var cmds = {
   },
 
   priv: {
-    args: ['nick'],
+    args: ['nick', 'msg'],
     fn:   cmd_priv,
     help: "send a private message"
   },
@@ -414,7 +414,7 @@ function cmd_priv(io, socket, args)
   if (users[args[1]] !== undefined){
     if (args.length > 2){
       var msg = args.slice(2).join(" ");
-      io.sockets.socket(users[args[1]].id).emit('updatetalk', users[args[1]].name + '»' + socket.username, socket.color, msg, new Date().getTime() / 1000);
+      io.sockets.socket(users[args[1]].id).emit('updatetalk', socket.username + '»' + users[args[1]].name, socket.color, msg, new Date().getTime() / 1000);
       socket.emit('updatetalk', socket.username + "»" + users[args[1]].name, users[args[1]].color, msg, new Date().getTime() / 1000);
     } else {
       socket.emit('updatetalk', 'SERVER', '#525252', 'usage: /priv <nick> <message>', new Date().getTime() / 1000);
