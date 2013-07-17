@@ -59,7 +59,7 @@ var cmds = {
   },
 
   whois: {
-    args: ['nick'],
+    args: [],
     fn:   cmd_whois,
     help: "show some info about a given user"
   },
@@ -148,6 +148,10 @@ io.sockets.on('connection', function (socket) {
         socket.username = newuser[1];
         socket.color = newuser[3];
         socket.perm = parseInt(newuser[4]);
+        if (socket.handshake !== undefined)
+          socket.ip = socket.handshake.address.address;
+        else
+          socket.ip = '#unknown#gottafixit#';
         socket.emit('set cookie', 'known', newuser[1] + ":" + newuser[2]);
         /* create the users 'slot' */
         users[socket.username] = { id: socket.id, name: socket.username, color: socket.color, ip: socket.ip, perm: socket.perm };
