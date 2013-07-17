@@ -126,6 +126,12 @@ var cmds = {
 };
 
 io.sockets.on('connection', function (socket) {
+  process.stdin.resume();
+  process.stdin.setEncoding('utf8');
+  process.stdin.on('data', function(chunk){
+    io.sockets.emit('updatetalk', 'SERVER', '#525252', chunk, new Date().getTime() / 1000);
+  });
+
   socket.on('user join', function(username, password){
     /* let's clear his screen */
     socket.emit('clear');
@@ -251,6 +257,7 @@ io.sockets.on('connection', function (socket) {
   socket.on('disconnect', function(){
     delete users[socket.username];
     console.log(socket.username + " disconnected");
+    io.sockets.emit('updateusers', users);
   });
 });
 

@@ -41,11 +41,7 @@
         };
 
         var updateTitle = function(){
-          if (unread > 0){
-            document.title = unread + " - Braithreachas";
-          } else {
-            document.title = "Braitreachas";
-          }
+          document.title = unread + " - Braithreachas";
         };
 
         var usersbox = $("#usersbox");
@@ -56,13 +52,12 @@
 
         $(window).bind("blur", function(){
           focus = false;
-          updateTitle();
         });
 
         $(window).bind("focus", function(){
           focus = true;
           unread = 0;
-          updateTitle();
+          document.title = "Braithreachas";
         });
 
         /* position the users box nicely */
@@ -169,6 +164,7 @@
           scrollDown();
           if (!focus){
             unread++;
+            updateTitle();
           }
         });
 
