@@ -198,30 +198,32 @@ io.sockets.on('connection', function (socket) {
        * XXX that's a /command
        */
       if (args[0].slice(0, 1) == '/'){
+        var canrun = false;
         var cmd = args[0].slice(1);
         if (cmds[cmd] !== undefined){
-          if (args.slice(1).length < cmds[cmd].args.length){
-            var cmdargs = "";
-            for (var i in cmds[cmd].args){
-              cmdargs += "<" + cmds[cmd].args[i] + "> ";
-            }
-            socket.emit('updatetalk', cmd.toUpperCase(), '#525252', 'usage: /' + cmd + ' ' + cmdargs, new Date().getTime() / 1000);
+          /* check for the permissions */
+          if (cmds[cmd].perm === undefined){
+            /* here, the command has no permissions defined, so we allow the
+             * user to run the command */
+            canrun = true;
           } else {
-            /* check for the permissions */
-            if (cmds[cmd].perm === undefined){
-              /* here, the command has no permissions defined, so we allow the
-               * user to run the command */
-              cmds[cmd].fn(io, socket, data.split(" ").slice());
-            } else {
-              if (socket.perm & cmds[cmd].perm.bit){
-                /* here, the user has the right bit set */
-                cmds[cmd].fn(io, socket, data.split(" ").slice());
-              } else {
-                /* here, he has not */
-                socket.emit('updatetalk', 'SERVER', '#525252', cmd + ': permission denied', new Date().getTime() / 1000);
-                /* mwahahahahahahaha */
-              }
+            if (socket.perm & cmds[cmd].perm.bit){
+              /* he has the permission */
+              canrun = true;
             }
+          }
+          if (canrun){
+            if (args.slice(1).length < cmds[cmd].args.length){
+              var cmdargs = "";
+              for (var i in cmds[cmd].args){
+                cmdargs += "<" + cmds[cmd].args[i] + "> ";
+              }
+              socket.emit('updatetalk', cmd.toUpperCase(), '#525252', 'usage: /' + cmd + ' ' + cmdargs, new Date().getTime() / 1000);
+            } else {
+              cmds[cmd].fn(io, socket, data.split(" ").slice());
+            }
+          } else {
+            socket.emit('updatetalk', 'SERVER', '#525252', cmd + ': permission denied', new Date().getTime() / 1000);
           }
         } else {
           socket.emit('updatetalk', 'SERVER', '#525252', "unknown command '" + cmd + "'", new Date().getTime() / 1000);
