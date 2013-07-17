@@ -251,8 +251,10 @@ function cmd_help(io, socket, args)
   /* {{{ help */
   var msg = "";
 
-  for (var i in cmds){
-    msg += i + ' - ' + cmds[i].help + "\n";
+  for (var cmd in cmds){
+    if ((cmds[cmd].perm === undefined) || ((cmds[cmd].perm !== undefined) && (socket.perm & cmds[cmd].perm.bit))){
+      msg += cmd + ' - ' + cmds[cmd].help + "\n";
+    }
   }
 
   socket.emit('updatetalk', 'HELP', '#525252', msg, new Date().getTime() / 1000);
