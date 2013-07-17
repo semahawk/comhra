@@ -29,6 +29,8 @@ var users = {};
  *   topic: 1 << 0
  *   perl:  1 << 1
  *   ban:   1 << 2
+ *   chmod: 1 << 3 // that one is kind of the most valuable
+ *                 // ie. that's the Oficerish bit
  *
  */
 var cmds = {
@@ -107,6 +109,16 @@ var cmds = {
     perm: {
       ch: 'p',
       bit: 1 << 1
+    }
+  },
+
+  chmod: {
+    args: ['[+-]perm', 'user'],
+    fn:   cmd_chmod,
+    help: "change user's permissions",
+    perm: {
+      ch: 'o',
+      bit: 1 << 3
     }
   }
 };
@@ -322,7 +334,6 @@ function cmd_whois(io, socket, args)
 
   if (found){
     var msg = 'name:  ' + users[found].name + '\ncolor: ' + users[found].color + '\nperm: ' + users[found].perm.toString(2) + '\nip: ' + users[found].ip;
-    console.log(msg);
     socket.emit('updatetalk', 'WHOIS', '#525252', msg, new Date().getTime() / 1000);
   } else {
     socket.emit('updatetalk', 'WHOIS', '#525252', "user '"+args[1]+"' not found", new Date().getTime() / 1000);
@@ -433,6 +444,66 @@ function cmd_perl(io, socket, args)
       io.sockets.emit('updatetalk', 'PERL', '#525252', stdout, new Date().getTime() / 1000);
     } else {
       io.sockets.emit('updatetalk', 'PERL', '#525252', stderr, new Date().getTime() / 1000);
+    }
+  });
+  /* }}} */
+}
+
+function cmd_chmod(io, socket, args)
+{
+  /* {{{ chmod */
+  var op;
+  var found = 0;
+  var perm;
+  var bit;
+
+  if (args[1].slice(0, 1) == '+'){
+    op = "add";
+  } else if (args[1].slice(0, 1) == '-'){
+    op = "rm";
+  } else {
+    socket.emit('updatetalk', 'CHMOD', '#525252', 'wrong action \''+args[1].slice(0,1)+'\' (can only be either \'+\' or \'-\')', new Date().getTime() / 1000);
+    return;
+  }
+
+  perm = args[1].slice(1);
+
+  /* okay, now let's check if the 'perm' actually exists */
+  for (var cmd in cmds){
+    if (cmds[cmd].perm !== undefined && cmds[cmd].perm.ch == perm){
+      bit = cmds[cmd].perm.bit;
+      found = 1;
+      break;
+    }
+  }
+
+  if (!found){
+    socket.emit('updatetalk', 'CHMOD', '#525252', "unknown perm '" + perm + "'", new Date().getTime() / 1000);
+    return;
+  }
+
+  /* okay, ready to update! */
+  var cmd = "./db fetch_user " + args[2];
+  /* let's check if there already is such user */
+  child = exec(cmd, function(err, stdout, stderr){
+    if (err === null){
+      var u = JSON.parse(stdout);
+      var newperm;
+      if (op == "add"){
+        newperm = u[4] | bit;
+      } else if (op == "rm"){
+        newperm = u[4] & (~bit);
+      }
+      var upcmd = "./db update_user '" + u[0] + "' '" + u[1] + "' '" + u[3] + "' '" + newperm + "'";
+      var ch2 = exec(upcmd, function(a,b,c){});
+      /* if the user is online at the time, give him the permissions right away */
+      if (users[u[1]] !== undefined){
+        users[u[1]].perm = newperm;
+        io.sockets.socket(users[u[1]].id).perm = newperm;
+      }
+      socket.emit('updatetalk', 'CHMOD', '#525252', "permissions set correctly, new permissions: '" + newperm.toString(2) + "'", new Date().getTime() / 1000);
+    } else {
+      socket.emit('updatetalk', 'CHMOD', '#525252', stderr, new Date().getTime() / 1000);
     }
   });
   /* }}} */
