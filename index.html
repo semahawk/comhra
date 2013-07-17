@@ -71,7 +71,7 @@
         $(".message").css("color", "#525252");
 
         socket.on('connect', function(){
-          scrollDown();
+          $("#entry").val("").prop("disabled", false);
           var name, color;
           if (handy.getCookie('known') === null){
             name = "##__unknown__##";
@@ -84,9 +84,7 @@
         });
 
         socket.on('disconnect', function(){
-          $("#toolbar").css("background", "#525252");
-          $(".message").css("color", "#525252");
-          $("html body *").css("color", "#5252525");
+          $("#entry").val("SERVER DOWN").prop("disabled", true);
           if (!banned){
             setInterval(function(){
               scrollDown();
@@ -104,14 +102,14 @@
           $('<div id="banned">').appendTo('body').html("BANNED<br><small>ouch</small>").css({
             'width': '100%',
             'text-align': 'center',
-            'margin-top': '100px', <!-- /* kind of hackish */ -->
+            'margin-top': '100px', /* kind of hackish */
             'color': '#cc3333',
             'font-size': '64px'
           });
         });
 
         socket.on('set cookie', function(key, value){
-          handy.setCookie(key, value, 60 * 60 * 24 * 7);
+          handy.setCookie(key, value, 1000 * 60 * 60 * 24 * 7);
         });
 
         socket.on('clear', function(){
