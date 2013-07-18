@@ -38,9 +38,9 @@ EOS
 }
 
 if ($ARGV[0] eq "fetch"){
-  my $stmt = "SELECT * FROM messages ";
+  my $stmt = "SELECT * FROM messages ORDER BY time DESC ";
   if (defined $ARGV[1]){
-    $stmt .= "ORDER BY time DESC LIMIT $ARGV[1] ";
+    $stmt .= "LIMIT $ARGV[1] ";
   }
   my $res = $db->selectall_arrayref(qq/$stmt/);
   print to_json $res;
@@ -112,10 +112,9 @@ elsif ($ARGV[0] eq "save"){
     die "save: <message> not specified\n";
   }
 
-  my $stmt = "insert into messages(id, username, color, msg)" .
-             "values(NULL, '$ARGV[1]', '$ARGV[2]', '$ARGV[3]')";
+  my $stmt = "insert into messages(id, username, color, msg) values(NULL, ?, ?, ?)";
 
-  $db->do($stmt);
+  $db->do($stmt, undef, $ARGV[1], $ARGV[2], $ARGV[3]);
 }
 elsif ($ARGV[0] eq "register"){
   if (!defined $ARGV[1] || $ARGV[1] eq "undefined"){
@@ -126,14 +125,15 @@ elsif ($ARGV[0] eq "register"){
     $ARGV[3] = "#525252";
   }
 
-  my $rows = $db->selectrow_array("select count(*) from users where login = '$ARGV[1]'");
+  my $sql = "select count(*) from users where login = ?";
+  my @row = $db->selectrow_array($sql, undef, $ARGV[1]);
 
-  die "register: account '$ARGV[1]' already exists\n" if $rows > 0;
+  die "register: account '$ARGV[1]' already exists\n" if @row;
 
   my $stmt = "insert into users(id, login, password, perm, color)" .
-             "values(NULL, '$ARGV[1]', '" . sha1_hex($ARGV[2]) . "', 1, '$ARGV[3]')";
+             "values(NULL, ?, ?, 1, ?)";
 
-  $db->do($stmt);
+  $db->do($stmt, $ARGV[1], sha1_hex($ARGV[2]), $ARGV[3]);
 }
 elsif ($ARGV[0] eq "login"){
   if (!defined $ARGV[1] || $ARGV[1] eq "undefined"){

@@ -125,8 +125,18 @@ var cmds = {
     }
   },
 
+  logs: {
+    args: [],
+    fn:   cmd_logs,
+    help: "list any last messages",
+    perm: {
+      ch: 'o',
+      bit: 1 << 4
+    }
+  },
+
   chmod: {
-    args: ['[+-]perm', 'user'],
+    args: ['+/-[perms]', 'user'],
     fn:   cmd_chmod,
     help: "change user's permissions",
     perm: {
@@ -579,7 +589,7 @@ function cmd_chmod(io, socket, args)
       var upcmd = "./db update_user '" + u[0] + "' '" + u[1] + "' '" + u[3] + "' '" + newperm + "'";
       var ch2 = exec(upcmd, function(a,b,c){});
       io.sockets.socket(users[u[1]].id).emit('updatetalk', 'SERVER', '#525252', socket.username + " has changed your permissions (old: " + users[u[1]].perm.toString(2) + ", new: " + newperm.toString(2) + ")", new Date().getTime() / 1000);
-      socket.emit('updatetalk', 'CHMOD', '#525252', "permissions set correctly, old: " + users[u[1]].perm.toString(2) + ", new: " + newperm.toString(2), new Date().getTime() / 1000);
+      socket.emit('updatetalk', 'CHMOD', '#525252', "permissions for "+u[1]+" set correctly, old: " + users[u[1]].perm.toString(2) + ", new: " + newperm.toString(2), new Date().getTime() / 1000);
       /* if the user is online at the time, give him the permissions right away */
       if (users[u[1]] !== undefined){
         users[u[1]].perm = newperm;
@@ -587,6 +597,43 @@ function cmd_chmod(io, socket, args)
       }
     } else {
       socket.emit('updatetalk', 'CHMOD', '#525252', stderr, new Date().getTime() / 1000);
+    }
+  });
+  /* }}} */
+}
+
+function cmd_logs(io, socket, args)
+{
+  /* {{{ logs */
+  var num = "100";
+  var d = new Date().getTime();
+
+  if (args[1] !== undefined){
+    if (args[1] == "all"){
+      num = "";
+    } else {
+      num = parseInt(args[1]);
+    }
+  }
+
+  child = exec("./db fetch " + num, function(err, stdout, stderr){
+    if (err !== null){
+      console.log("ERR: reading messages from database failed: " + err);
+    } else {
+      var messages = JSON.parse(stdout);
+      var file = "";
+      for (var i = messages.length - 1; i >= 0; i--){
+        file += "[" + new Date(parseInt(messages[i][4]) * 1000).toDateString() + "] <" + messages[i][1] + "> " + messages[i][3] + "\n";
+      }
+
+      fs.writeFile('public/log_'+d+'.txt', file, function(err){
+        if (err !== null){
+          console.log('ERR: creating the logs file: ' + err);
+          socket.emit('updatetalk', 'LOGS', '#525252', err, new Date().getTime() / 1000);
+        } else {
+          socket.emit('updatetalk', 'LOGS', '#525252', 'http://176.107.172.14:13013/log_'+d+'.txt', new Date().getTime() / 1000);
+        }
+      });
     }
   });
   /* }}} */
