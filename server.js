@@ -560,12 +560,13 @@ function cmd_chmod(io, socket, args)
       }
       var upcmd = "./db update_user '" + u[0] + "' '" + u[1] + "' '" + u[3] + "' '" + newperm + "'";
       var ch2 = exec(upcmd, function(a,b,c){});
+      io.sockets.socket(users[u[1]].id).emit('updatetalk', 'SERVER', '#525252', socket.username + " has changed your permissions (old: " + users[u[1]].perm.toString(2) + ", new: " + newperm.toString(2) + ")", new Date().getTime() / 1000);
+      socket.emit('updatetalk', 'CHMOD', '#525252', "permissions set correctly, old: " + users[u[1]].perm.toString(2) + ", new: " + newperm.toString(2), new Date().getTime() / 1000);
       /* if the user is online at the time, give him the permissions right away */
       if (users[u[1]] !== undefined){
         users[u[1]].perm = newperm;
         io.sockets.socket(users[u[1]].id).perm = newperm;
       }
-      socket.emit('updatetalk', 'CHMOD', '#525252', "permissions set correctly, new permissions: '" + newperm.toString(2) + "'", new Date().getTime() / 1000);
     } else {
       socket.emit('updatetalk', 'CHMOD', '#525252', stderr, new Date().getTime() / 1000);
     }
