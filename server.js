@@ -114,6 +114,16 @@ var cmds = {
     }
   },
 
+  js: {
+    args: ['code'],
+    fn:   cmd_js,
+    help: "run a bit of JavaScript",
+    perm: {
+      ch: 'j',
+      bit: 1 << 2
+    }
+  },
+
   chmod: {
     args: ['[+-]perm', 'user'],
     fn:   cmd_chmod,
@@ -482,6 +492,22 @@ function cmd_perl(io, socket, args)
       io.sockets.emit('updatetalk', 'PERL', '#525252', stdout, new Date().getTime() / 1000);
     } else {
       io.sockets.emit('updatetalk', 'PERL', '#525252', stderr, new Date().getTime() / 1000);
+    }
+  });
+  /* }}} */
+}
+
+function cmd_js(io, socket, args)
+{
+  /* {{{ js */
+  var code = args.slice(1).join(" ").replace(/'/g, '"');
+  var final_code = "sudo -u nobody node -e '" + code + "' < /dev/null";
+  io.sockets.emit('updatetalk', socket.username, socket.color, '/js ' + code, new Date().getTime() / 1000);
+  child = exec(final_code, function(err, stdout, stderr){
+    if (err === null){
+      io.sockets.emit('updatetalk', 'JS', '#525252', stdout, new Date().getTime() / 1000);
+    } else {
+      io.sockets.emit('updatetalk', 'JS', '#525252', stderr, new Date().getTime() / 1000);
     }
   });
   /* }}} */
