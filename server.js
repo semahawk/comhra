@@ -43,6 +43,18 @@ var cmds = {
     help: "show this listing"
   },
 
+  afk: {
+    args: [],
+    fn:   cmd_afk,
+    help: "inform others that you're going away"
+  },
+
+  back: {
+    args: [],
+    fn:   cmd_back,
+    help: "inform others that you're back"
+  },
+
   color: {
     args: ['color'],
     fn:   cmd_color,
@@ -184,7 +196,7 @@ io.sockets.on('connection', function (socket) {
           socket.ip = '#unknown#gottafixit#';
         socket.emit('set cookie', 'known', newuser[1] + ":" + newuser[2]);
         /* create the users 'slot' */
-        users[socket.username] = { id: socket.id, name: socket.username, color: socket.color, ip: socket.ip, perm: socket.perm, active: true };
+        users[socket.username] = { id: socket.id, name: socket.username, color: socket.color, ip: socket.ip, perm: socket.perm, active: true, afk: false };
         console.log(socket.username + " (" + socket.handshake.address.address + ") has joined");
         io.sockets.emit('updateusers', users);
         socket.emit('updateuser', socket.username, socket.color);
@@ -192,13 +204,12 @@ io.sockets.on('connection', function (socket) {
         socket.username = "name_" + unknms++;
         socket.color = '#525252';
         socket.perm = 0;
-        socket.active = true;
         if (socket.handshake !== undefined)
           socket.ip = socket.handshake.address.address;
         else
           socket.ip = '#unknown#gottafixit#';
         /* create the users 'slot' */
-        users[socket.username] = { id: socket.id, name: socket.username, color: socket.color, ip: socket.ip, perm: socket.perm, active: true };
+        users[socket.username] = { id: socket.id, name: socket.username, color: socket.color, ip: socket.ip, perm: socket.perm, active: true, afk: false };
         console.log(socket.username + " (" + socket.ip + ") has joined");
         io.sockets.emit('updateusers', users);
         socket.emit('updateuser', socket.username, socket.color);
@@ -308,6 +319,33 @@ function cmd_help(io, socket, args)
   }
 
   socket.emit('updatetalk', 'HELP', '#525252', msg, new Date().getTime() / 1000);
+  /* }}} */
+}
+
+function cmd_afk(io, socket, args)
+{
+  /* {{{ afk */
+  var msg = socket.username + " is going away";
+  var time = "";
+
+  if (args[1] !== undefined){
+    time = " (for around " + args[1] + " minutes)";
+  }
+
+  msg += time;
+
+  users[socket.username].afk = true;
+  io.sockets.emit('updatetalk', 'SERVER', '#525252', msg, new Date().getTime() / 1000);
+  io.sockets.emit('updateusers', users);
+  /* }}} */
+}
+
+function cmd_back(io, socket, args)
+{
+  /* {{{ back */
+  users[socket.username].afk = false;
+  io.sockets.emit('updatetalk', 'SERVER', '#525252', socket.username + " is back", new Date().getTime() / 1000);
+  io.sockets.emit('updateusers', users);
   /* }}} */
 }
 

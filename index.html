@@ -178,10 +178,16 @@
         socket.on('updateusers', function(users){
           var inside = "<ul>";
           var prefix = "&nbsp;";
+          var color;
           for (var user in users){
             if (users[user].active)
               prefix = "&middot;";
-            inside += "<li style='color: " + users[user].color + ";'>" + prefix + users[user].name + "</li>";
+            /* force the color #525252 if the user is AFK */
+            if (users[user].afk)
+              color = "#525252";
+            else
+              color = users[user].color;
+            inside += "<li style='color: " + color + ";'>" + prefix + users[user].name + "</li>";
           }
           inside += "</ul>";
           usersbox.html(inside);
