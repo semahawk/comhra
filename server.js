@@ -24,7 +24,8 @@ var unknms = 0;
 // meant to be passed to the client
 var users = {};
 
-/*
+/* {{{ commands
+ *
  * Permission bits:
  *
  *   registered: 1 << 0
@@ -134,6 +135,7 @@ var cmds = {
     }
   }
 };
+/* }}} */
 
 io.sockets.on('connection', function (socket) {
   process.stdin.resume();
@@ -518,8 +520,8 @@ function cmd_chmod(io, socket, args)
   /* {{{ chmod */
   var op;
   var found = 0;
-  var perm;
-  var bit;
+  var perms = new Array();
+  var bits = new Array();
 
   if (args[1].slice(0, 1) == '+'){
     op = "add";
@@ -530,20 +532,32 @@ function cmd_chmod(io, socket, args)
     return;
   }
 
-  perm = args[1].slice(1);
+  perms = args[1].slice(1).split("");
 
-  /* okay, now let's check if the 'perm' actually exists */
-  for (var cmd in cmds){
-    if (cmds[cmd].perm !== undefined && cmds[cmd].perm.ch == perm){
-      bit = cmds[cmd].perm.bit;
-      found = 1;
-      break;
+  /* if no perms were given atull, then we default to ull of them */
+  if (perms.length == 0){
+    for (var cmd in cmds){
+      if (cmds[cmd].perm !== undefined)
+        bits.push(cmds[cmd].perm.bit);
     }
-  }
+  /* no, actually, there were some permissions specified */
+  } else {
+    for (var p in perms){
+      var perm = perms[p];
+      /* okay, now let's check if the 'perm' actually exists */
+      for (var cmd in cmds){
+        if (cmds[cmd].perm !== undefined && cmds[cmd].perm.ch == perm){
+          bits.push(cmds[cmd].perm.bit);
+          found = 1;
+          break;
+        }
+      }
 
-  if (!found){
-    socket.emit('updatetalk', 'CHMOD', '#525252', "unknown perm '" + perm + "'", new Date().getTime() / 1000);
-    return;
+      if (!found){
+        socket.emit('updatetalk', 'CHMOD', '#525252', "unknown perm '" + perm + "'", new Date().getTime() / 1000);
+        return;
+      }
+    }
   }
 
   /* okay, ready to update! */
@@ -553,10 +567,14 @@ function cmd_chmod(io, socket, args)
     if (err === null){
       var u = JSON.parse(stdout);
       var newperm;
+      var newbit = 0;
+      for (var bit in bits){
+        newbit |= bits[bit];
+      }
       if (op == "add"){
-        newperm = u[4] | bit;
+        newperm = u[4] | newbit;
       } else if (op == "rm"){
-        newperm = u[4] & (~bit);
+        newperm = u[4] & (~newbit);
       }
       var upcmd = "./db update_user '" + u[0] + "' '" + u[1] + "' '" + u[3] + "' '" + newperm + "'";
       var ch2 = exec(upcmd, function(a,b,c){});
