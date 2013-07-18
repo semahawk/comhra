@@ -112,6 +112,15 @@ a:hover {
   vertical-align: top;
 }
 
+.message .msg-quote {
+  font-family: serif;
+  font-style: italic;
+  font-size: 14px;
+  padding-left: 20px;
+  border-left: 4px solid #336633;
+  /*background: #26292E;*/
+}
+
 .nick {
   color: #525252;
   padding: 0 1em 0 0.5em;

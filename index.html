@@ -122,6 +122,7 @@
         });
 
         socket.on('updatetalk', function(username, color, msg, time){
+          var msgclass = "msg-text";
           var dateclass = "date";
           /* time passed here are seconds since epoch, but new Date() expects
              milliseconds */
@@ -129,6 +130,11 @@
           var re = new RegExp(username);
           if (re.exec(msg)){
             dateclass = "date_mentioned";
+          }
+          /* check if the message starts with a '>' */
+          if (msg.slice(0, 1) == '>'){
+            msg = msg.slice(2);
+            msgclass = "msg-quote";
           }
           /* sanitize user's name */
           username = handy.toStaticHTML(username);
@@ -160,7 +166,7 @@
           talk.append("<tr class='message'>" +
             "<td class='" + dateclass + "'>[" + handy.timeString(new Date(time)) + "]"+"</td>" +
             "<td class='nick'>&lt;<span style='color: "+color+";'>" + username + "</span>&gt;</td>" +
-            "<td class='msg-text'>" + msg + "</td>" +
+            "<td class='" + msgclass + "'>" + msg + "</td>" +
           "</tr>");
           scrollDown();
           if (!focus){
